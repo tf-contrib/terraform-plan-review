@@ -52,17 +52,21 @@ jobs:
       - uses: opentofu/setup-opentofu@v1
         with:
           tofu_wrapper: false
-      - run: tofu init -input=false && tofu plan -input=false -out=tfplan
+      - run: |
+          tofu init -input=false
+          tofu plan -input=false -out=tfplan
+          tofu show -json tfplan > tfplan.json
         working-directory: infra
       - uses: tofu-contrib/tofu-plan-review@main
         with:
-          plan: infra/tfplan
+          plan: infra/tfplan.json
           working-directory: infra
 ```
 
-`plan` accepts a binary plan file (converted with `tofu show -json` in
-`working-directory`, so state and plan encryption settings apply) or the JSON
-output of `tofu show -json`.
+The action runs in a container, so it takes the JSON plan rather than the
+binary plan file: `tofu show -json` runs in your job, with your OpenTofu
+version, providers and encryption settings. Plan files must be inside the
+workspace (not `runner.temp`), since only the workspace is mounted.
 
 ## Multiple roots
 
@@ -81,12 +85,15 @@ jobs:
       - uses: opentofu/setup-opentofu@v1
         with:
           tofu_wrapper: false
-      - run: tofu init -input=false && tofu plan -input=false -out=tfplan
+      - run: |
+          tofu init -input=false
+          tofu plan -input=false -out=tfplan
+          tofu show -json tfplan > tfplan.json
         working-directory: infra/${{ matrix.root }}
       - uses: tofu-contrib/tofu-plan-review@main
         with:
           mode: analyze
-          plan: infra/${{ matrix.root }}/tfplan
+          plan: infra/${{ matrix.root }}/tfplan.json
           working-directory: infra/${{ matrix.root }}
           report: report-${{ matrix.root }}.json
       - uses: actions/upload-artifact@v4
@@ -176,7 +183,6 @@ without a new push.
 | `annotate`          | `true`                 | Annotate source lines in the pull request diff                           |
 | `summary`           | `true`                 | Write the full review to the job summary                                 |
 | `fail-on-block`     | `true`                 | Fail the step when a blocking rule matches                               |
-| `tofu`              | `tofu`                 | Binary used to convert binary plans                                      |
 | `github-token`      | `github.token`         | Token with `pull-requests: write`                                        |
 
 Outputs: `has-changes`, `destructive`, `blocked`, `to-add`, `to-change`,
@@ -189,7 +195,14 @@ go install github.com/tofu-contrib/tofu-plan-review/cmd/tofu-plan-review@latest
 
 tofu plan -out=tfplan
 tofu-plan-review render tfplan > review.md
+
+# or with the image
+tofu show -json tfplan > tfplan.json
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/tofu-contrib/tofu-plan-review render tfplan.json
 ```
+
+The CLI accepts binary plan files too, converting them with `tofu show -json`
+when `tofu` is on the `PATH`.
 
 Run `tofu-plan-review <command> --help` for all options. Every option can also
 be set with a `TOFU_PLAN_REVIEW_<OPTION>` environment variable, e.g.
@@ -206,10 +219,11 @@ be set with a `TOFU_PLAN_REVIEW_<OPTION>` environment variable, e.g.
   nothing.
 - Content-based redaction skips sensitive values shorter than 4 characters
   to avoid redacting unrelated text.
-- Linux runners only. At a release tag (`@vX.Y.Z`, or that tag's commit
-  SHA) the action downloads the release binary and verifies its checksum.
-  At other refs, such as `@main`, it builds from source with Go (about 20
-  seconds).
+- Linux runners only: the action is a Docker container action using a
+  `FROM scratch` image (about 10 MB) with the static binary, published to
+  `ghcr.io/tofu-contrib/tofu-plan-review` for amd64 and arm64. Each release
+  of the action pins its own image version, and `@main` uses the latest
+  release.
 
 ## Development
 

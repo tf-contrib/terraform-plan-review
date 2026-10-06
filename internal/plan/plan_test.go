@@ -68,3 +68,13 @@ func TestLoadBinaryPlanReportsShowErrors(t *testing.T) {
 		t.Errorf("err = %v", err)
 	}
 }
+
+func TestLoadBinaryPlanWithoutTofu(t *testing.T) {
+	dir := t.TempDir()
+	planFile := filepath.Join(dir, "tfplan")
+	_ = os.WriteFile(planFile, []byte("PK"), 0o644)
+	_, err := Load(planFile, "tofu-does-not-exist", dir)
+	if err == nil || !strings.Contains(err.Error(), "pass the output of `tofu show -json`") {
+		t.Errorf("err = %v", err)
+	}
+}

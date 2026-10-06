@@ -21,27 +21,35 @@ func NewAnalyze() *cli.Command {
 		Name:      "analyze",
 		Usage:     "Write a redacted report for one root, to combine roots with comment",
 		ArgsUsage: "PLAN",
-		Flags: append(inputFlags(),
-			&cli.StringFlag{
-				Name:    "out",
-				Usage:   "write the report to this file (default: stdout)",
-				Sources: env("OUT"),
-			},
-		),
+		Flags:     append(inputFlags(), analyzeFlags()...),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			if cmd.NArg() != 1 {
-				return errors.New("analyze takes exactly one plan file")
-			}
-			r, err := newAnalyzer(cmd).analyze(cmd.Args().First())
-			if err != nil {
-				return err
-			}
-			if out := cmd.String("out"); out != "" {
-				return r.Write(out)
-			}
-			return r.Encode(cmd.Root().Writer)
+			return runAnalyze(cmd, cmd.Args().Slice())
 		},
 	}
+}
+
+func analyzeFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.StringFlag{
+			Name:    "out",
+			Usage:   "write the report to this file (default: stdout)",
+			Sources: env("OUT"),
+		},
+	}
+}
+
+func runAnalyze(cmd *cli.Command, paths []string) error {
+	if len(paths) != 1 {
+		return errors.New("analyze takes exactly one plan file")
+	}
+	r, err := newAnalyzer(cmd).analyze(paths[0])
+	if err != nil {
+		return err
+	}
+	if out := cmd.String("out"); out != "" {
+		return r.Write(out)
+	}
+	return r.Encode(cmd.Root().Writer)
 }
 
 // NewRender creates the command that prints the review as Markdown.
@@ -87,42 +95,48 @@ func NewComment() *cli.Command {
 		Description: `Reads the pull request, repository and token from the GitHub Actions
 environment (GITHUB_EVENT_PATH, GITHUB_REPOSITORY, GITHUB_TOKEN).`,
 		ArgsUsage: "INPUT...",
-		Flags: slices.Concat(inputFlags(), renderFlags(), []cli.Flag{
-			&cli.IntFlag{
-				Name:    "pr",
-				Usage:   "pull request number; 0 reads it from the event payload",
-				Sources: env("PR"),
-			},
-			&cli.BoolFlag{
-				Name:    "dry-run",
-				Usage:   "print the comment instead of posting it",
-				Sources: env("DRY_RUN"),
-			},
-			&cli.BoolFlag{
-				Name:    "annotate",
-				Usage:   "annotate changed resources in the pull request diff; on by default, disable with --annotate=false",
-				Sources: env("ANNOTATE"),
-				Value:   true,
-			},
-			&cli.BoolFlag{
-				Name:    "summary",
-				Usage:   "write the full review to the job summary; on by default",
-				Sources: env("SUMMARY"),
-				Value:   true,
-			},
-			&cli.BoolFlag{
-				Name:    "fail-on-block",
-				Usage:   "exit with status 2 when a blocking rule matches; on by default",
-				Sources: env("FAIL_ON_BLOCK"),
-				Value:   true,
-			},
-		}),
-		Action: runComment,
+		Flags:     slices.Concat(inputFlags(), renderFlags(), commentFlags()),
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			return runComment(cmd, cmd.Args().Slice())
+		},
 	}
 }
 
-func runComment(ctx context.Context, cmd *cli.Command) error {
-	reports, err := newAnalyzer(cmd).load(cmd.Args().Slice())
+func commentFlags() []cli.Flag {
+	return []cli.Flag{
+		&cli.IntFlag{
+			Name:    "pr",
+			Usage:   "pull request number; 0 reads it from the event payload",
+			Sources: env("PR"),
+		},
+		&cli.BoolFlag{
+			Name:    "dry-run",
+			Usage:   "print the comment instead of posting it",
+			Sources: env("DRY_RUN"),
+		},
+		&cli.BoolFlag{
+			Name:    "annotate",
+			Usage:   "annotate changed resources in the pull request diff; on by default, disable with --annotate=false",
+			Sources: env("ANNOTATE"),
+			Value:   true,
+		},
+		&cli.BoolFlag{
+			Name:    "summary",
+			Usage:   "write the full review to the job summary; on by default",
+			Sources: env("SUMMARY"),
+			Value:   true,
+		},
+		&cli.BoolFlag{
+			Name:    "fail-on-block",
+			Usage:   "exit with status 2 when a blocking rule matches; on by default",
+			Sources: env("FAIL_ON_BLOCK"),
+			Value:   true,
+		},
+	}
+}
+
+func runComment(cmd *cli.Command, paths []string) error {
+	reports, err := newAnalyzer(cmd).load(paths)
 	if err != nil {
 		return err
 	}
