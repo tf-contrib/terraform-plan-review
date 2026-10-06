@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/tofu-contrib/tofu-plan-review/compare/v0.2.0...v0.2.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* read rules from .github/tofu-plan-review.hcl and fail on a missing --config ([#9](https://github.com/tofu-contrib/tofu-plan-review/issues/9)) ([2d276a5](https://github.com/tofu-contrib/tofu-plan-review/commit/2d276a528123d1f6cabff2f78f075b0e90f2f2dd))
+
 ## [0.2.0](https://github.com/tofu-contrib/tofu-plan-review/compare/v0.1.0...v0.2.0) (2026-10-06)
 
 
