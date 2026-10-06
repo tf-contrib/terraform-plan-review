@@ -31,7 +31,7 @@ import (
 // DefaultFile is where rules are read from, relative to the repository root.
 const DefaultFile = ".github/tofu-plan-review.hcl"
 
-// LegacyFile is the default location before 0.3.0. It is still read, with a
+// LegacyFile is the default location before 0.2.1. It is still read, with a
 // deprecation notice, when DefaultFile is absent.
 const LegacyFile = ".github/tofu/review.hcl"
 
