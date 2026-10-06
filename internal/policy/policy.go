@@ -1,4 +1,4 @@
-// Package policy loads review rules from .github/tofu/review.hcl.
+// Package policy loads review rules from .github/tofu-plan-review.hcl.
 //
 //	override_label = "destroy-approved"
 //
@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -28,7 +29,25 @@ import (
 )
 
 // DefaultFile is where rules are read from, relative to the repository root.
-const DefaultFile = ".github/tofu/review.hcl"
+const DefaultFile = ".github/tofu-plan-review.hcl"
+
+// LegacyFile is the default location before 0.3.0. It is still read, with a
+// deprecation notice, when DefaultFile is absent.
+const LegacyFile = ".github/tofu/review.hcl"
+
+// Find returns the rules file in repoRoot, or "" when there is none. legacy
+// reports whether it was found at LegacyFile.
+func Find(repoRoot string) (file string, legacy bool, err error) {
+	for _, name := range []string{DefaultFile, LegacyFile} {
+		path := filepath.Join(repoRoot, name)
+		if _, err := os.Stat(path); err == nil {
+			return path, name == LegacyFile, nil
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return "", false, err
+		}
+	}
+	return "", false, nil
+}
 
 type Severity string
 
@@ -60,10 +79,11 @@ type Rule struct {
 	Attributes []string `hcl:"attributes,optional"`
 }
 
-// Load reads a config file. A missing file yields an empty config.
+// Load reads a config file. A missing file is an error, so a mistyped path
+// can't silently disable the rules.
 func Load(file string) (*Config, error) {
-	if _, err := os.Stat(file); errors.Is(err, os.ErrNotExist) {
-		return &Config{}, nil
+	if _, err := os.Stat(file); err != nil {
+		return nil, err
 	}
 	p := hclparse.NewParser()
 	f, diags := p.ParseHCLFile(file)

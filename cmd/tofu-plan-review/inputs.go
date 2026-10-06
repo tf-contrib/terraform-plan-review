@@ -77,13 +77,9 @@ func (a *analyzer) analyze(planPath string) (*report.Report, error) {
 	if repoRoot == "" {
 		repoRoot = gitTopLevel(a.dir)
 	}
-	cfgPath := a.config
-	if cfgPath == "" {
-		cfgPath = filepath.Join(repoRoot, policy.DefaultFile)
-	}
-	cfg, err := policy.Load(cfgPath)
+	cfg, err := a.policy(repoRoot)
 	if err != nil {
-		return nil, fmt.Errorf("loading %s: %w", cfgPath, err)
+		return nil, err
 	}
 	idx, err := source.Build(a.dir, repoRoot, p.Configuration.RootModule)
 	if err != nil {
@@ -100,6 +96,31 @@ func (a *analyzer) analyze(planPath string) (*report.Report, error) {
 		name = dir
 	}
 	return report.Analyze(p, report.Options{Name: name, Dir: dir, Policy: cfg, Sources: idx}), nil
+}
+
+// policy loads --config, or the default rules file in repoRoot. Only the
+// default may be missing, which means no rules.
+func (a *analyzer) policy(repoRoot string) (*policy.Config, error) {
+	path := a.config
+	if path == "" {
+		found, legacy, err := policy.Find(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		if found == "" {
+			return &policy.Config{}, nil
+		}
+		if legacy {
+			fmt.Fprintf(os.Stderr, "tofu-plan-review: %s is deprecated, move it to %s\n",
+				policy.LegacyFile, policy.DefaultFile)
+		}
+		path = found
+	}
+	cfg, err := policy.Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("loading rules: %w", err)
+	}
+	return cfg, nil
 }
 
 func gitTopLevel(dir string) string {

@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,10 +9,42 @@ import (
 )
 
 func TestLoadMissingFile(t *testing.T) {
-	cfg, err := Load(filepath.Join(t.TempDir(), "nope.hcl"))
-	if err != nil || len(cfg.Rules) != 0 {
-		t.Fatalf("got %+v, %v", cfg, err)
+	if _, err := Load(filepath.Join(t.TempDir(), "nope.hcl")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("want a not-exist error, got %v", err)
 	}
+}
+
+func TestFind(t *testing.T) {
+	root := t.TempDir()
+	write := func(name string) {
+		t.Helper()
+		path := filepath.Join(root, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	check := func(wantFile string, wantLegacy bool) {
+		t.Helper()
+		file, legacy, err := Find(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if wantFile != "" {
+			wantFile = filepath.Join(root, wantFile)
+		}
+		if file != wantFile || legacy != wantLegacy {
+			t.Errorf("got %q, legacy %v; want %q, legacy %v", file, legacy, wantFile, wantLegacy)
+		}
+	}
+
+	check("", false)
+	write(LegacyFile)
+	check(LegacyFile, true)
+	write(DefaultFile)
+	check(DefaultFile, false)
 }
 
 func TestLoadValidates(t *testing.T) {
