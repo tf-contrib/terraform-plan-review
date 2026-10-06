@@ -1,5 +1,11 @@
 # tofu-plan-review
 
+[![CI](https://github.com/tofu-contrib/tofu-plan-review/actions/workflows/ci.yml/badge.svg)](https://github.com/tofu-contrib/tofu-plan-review/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tofu-contrib/tofu-plan-review?include_prereleases)](https://github.com/tofu-contrib/tofu-plan-review/releases)
+[![License](https://img.shields.io/badge/License-MPL--2.0-brightgreen.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![OpenTofu](https://img.shields.io/badge/OpenTofu-compatible-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
+
 Readable [OpenTofu](https://opentofu.org) plan reviews on pull requests.
 
 Most plan commenters paste the text output of `tofu plan` into a comment.
