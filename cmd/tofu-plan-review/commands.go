@@ -148,11 +148,13 @@ func runComment(cmd *cli.Command, paths []string) error {
 		gh.PR = int(pr)
 	}
 	opts := render.Options{
-		ID:      cmd.String("id"),
-		Title:   cmd.String("title"),
-		BlobURL: gh.BlobURL(),
-		Commit:  gh.Commit(),
-		Labels:  gh.Labels,
+		ID:          cmd.String("id"),
+		Title:       cmd.String("title"),
+		BlobURL:     gh.BlobURL(),
+		Commit:      gh.Commit(),
+		CommitURL:   gh.CommitURL(),
+		ToolVersion: buildVersion(),
+		Labels:      gh.Labels,
 	}
 	stdout := cmd.Root().Writer
 

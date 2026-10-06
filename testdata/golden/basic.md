@@ -85,5 +85,5 @@
 
 </details>
 
-<sub>tofu-plan-review · OpenTofu 1.13.1 · planned at `0123456`</sub>
+<sub>[tofu-plan-review](https://github.com/tofu-contrib/tofu-plan-review) · OpenTofu 1.13.1 · plan for `0123456`</sub>
 <!-- tofu-plan-review:state:H4sIAAAAAAAA/2zPTYrEIBCG4bvUuglGjX+XaUqrHAJJDMbpoWly98HtOLtaPHzF+4EXhPkBCQKIWSq9GOs8xkSc4QEVwgciXmvqx17oe+MJz3NqXCvmUvcnYcOJ+NzKe+ejQQCVnVuySdlJAw/4Q3OpX6U1PiAAxiT1HAXblEe5rVefo6jYRr0YjWlEB/9AACmTsChNFHkZTdmoP+OMQngfRaTRnGVb0xsCWKWNt46sQzWyygfuTM9W+iKK7Kz3BiWO9OJUuQdoLWf0UhNJ/x+rL669U0UZZ2/IZob7vn8DAAD//x6umeubAQAA -->

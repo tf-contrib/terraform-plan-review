@@ -170,3 +170,21 @@ func TestHTMLInNamesIsEscaped(t *testing.T) {
 		t.Errorf("user-provided names must be escaped:\n%s", out)
 	}
 }
+
+func TestFooter(t *testing.T) {
+	db := database(t)
+	db.TofuVersion = "1.12.0"
+	out := Markdown([]*report.Report{basic(t), db}, Options{
+		Commit:      "0123456789abcdef",
+		CommitURL:   "https://github.com/example/infra/commit/0123456789abcdef",
+		ToolVersion: "0.2.0",
+	})
+	want := "<sub>[tofu-plan-review](" + ProjectURL + ") v0.2.0 · OpenTofu 1.13.1, 1.12.0 · " +
+		"plan for [`0123456`](https://github.com/example/infra/commit/0123456789abcdef)</sub>"
+	if !strings.Contains(out, want) {
+		t.Errorf("footer missing:\n%s", want)
+	}
+	if out := Markdown([]*report.Report{basic(t)}, Options{ToolVersion: "dev"}); !strings.Contains(out, "<sub>[tofu-plan-review]("+ProjectURL+") · OpenTofu 1.13.1</sub>") {
+		t.Error("dev builds should not show a version, and no commit means no SHA")
+	}
+}
