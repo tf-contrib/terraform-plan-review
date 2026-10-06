@@ -30,7 +30,11 @@ type Options struct {
 	// had to be omitted.
 	DetailsURL string
 	Commit     string
-	Previous   *State
+	// CommitURL links the commit in the footer. Empty shows the SHA only.
+	CommitURL string
+	// ToolVersion is the tofu-plan-review version shown in the footer.
+	ToolVersion string
+	Previous    *State
 	// Labels on the pull request; used for policy override labels.
 	Labels []string
 	// Limit is the maximum output length in bytes.
@@ -616,14 +620,36 @@ func (r *renderer) link(c report.Change) string {
 	return fmt.Sprintf("[%s](%s/%s#L%d)", addr, r.opts.BlobURL, c.Source.File, c.Source.Line)
 }
 
+// ProjectURL is linked from the footer of every comment.
+const ProjectURL = "https://github.com/tofu-contrib/tofu-plan-review"
+
 func (r *renderer) footer(b *strings.Builder) {
-	var parts []string
-	parts = append(parts, "tofu-plan-review")
-	if len(r.reports) > 0 && r.reports[0].TofuVersion != "" {
-		parts = append(parts, "OpenTofu "+r.reports[0].TofuVersion)
+	tool := "[tofu-plan-review](" + ProjectURL + ")"
+	if v := r.opts.ToolVersion; v != "" && v != "dev" {
+		if v[0] >= '0' && v[0] <= '9' {
+			v = "v" + v
+		}
+		tool += " " + v
 	}
+	parts := []string{tool}
+
+	// Roots may be planned with different versions; list each once.
+	var versions []string
+	for _, rep := range r.reports {
+		if v := rep.TofuVersion; v != "" && !slices.Contains(versions, v) {
+			versions = append(versions, v)
+		}
+	}
+	if len(versions) > 0 {
+		parts = append(parts, "OpenTofu "+strings.Join(versions, ", "))
+	}
+
 	if r.opts.Commit != "" {
-		parts = append(parts, "planned at `"+short(r.opts.Commit)+"`")
+		sha := "`" + short(r.opts.Commit) + "`"
+		if r.opts.CommitURL != "" {
+			sha = "[" + sha + "](" + r.opts.CommitURL + ")"
+		}
+		parts = append(parts, "plan for "+sha)
 	}
 	fmt.Fprintf(b, "<sub>%s</sub>\n", strings.Join(parts, " · "))
 	if s := r.state.encode(); s != "" {

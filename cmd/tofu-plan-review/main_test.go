@@ -302,3 +302,65 @@ func TestDefaultConfigPath(t *testing.T) {
 		t.Error("rules in .github/tofu/review.hcl should be loaded by default")
 	}
 }
+
+func TestActionAnalyzeFromEnvironment(t *testing.T) {
+	out := filepath.Join(t.TempDir(), "report.json")
+	t.Setenv("GITHUB_WORKSPACE", "")
+	t.Setenv("TOFU_PLAN_REVIEW_MODE", "analyze")
+	t.Setenv("TOFU_PLAN_REVIEW_PLAN", "\n  "+basicPlan+"  \n\n")
+	t.Setenv("TOFU_PLAN_REVIEW_DIR", basicDir)
+	t.Setenv("TOFU_PLAN_REVIEW_REPO_ROOT", "../..")
+	t.Setenv("TOFU_PLAN_REVIEW_NAME", "basic")
+	t.Setenv("TOFU_PLAN_REVIEW_OUT", out)
+	if _, err := run(t, "action"); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(out)
+	if err != nil || !strings.Contains(string(data), `"name": "basic"`) {
+		t.Errorf("report not written: %v\n%s", err, data)
+	}
+}
+
+func TestActionCommentFromEnvironment(t *testing.T) {
+	gh := newFakeGitHub(t)
+	actionsEnv(t, gh.server.URL)
+	t.Setenv("GITHUB_WORKSPACE", "")
+	t.Setenv("TOFU_PLAN_REVIEW_REPO_ROOT", "../..")
+	t.Setenv("TOFU_PLAN_REVIEW_CONFIG", rules)
+	t.Setenv("TOFU_PLAN_REVIEW_FAIL_ON_BLOCK", "false")
+	// Combine per-root reports, like the matrix setup does.
+	dir := t.TempDir()
+	var reports []string
+	for name, args := range map[string][]string{
+		"basic":    {"--dir", basicDir, basicPlan},
+		"database": {"--dir", databaseDir, databasePlan},
+	} {
+		p := filepath.Join(dir, name+".json")
+		if _, err := run(t, append([]string{"analyze", "--repo-root", "../..", "--name", name, "--out", p}, args...)...); err != nil {
+			t.Fatal(err)
+		}
+		reports = append(reports, p)
+	}
+	t.Setenv("TOFU_PLAN_REVIEW_PLAN", strings.Join(reports, "\n"))
+	if _, err := run(t, "action"); err != nil {
+		t.Fatal(err)
+	}
+	if len(gh.comments) != 1 || !strings.Contains(gh.comments[0].Body, "| `database` |") {
+		t.Errorf("expected one combined comment, got %d", len(gh.comments))
+	}
+}
+
+func TestActionRejectsBadInput(t *testing.T) {
+	t.Setenv("GITHUB_WORKSPACE", "/github/workspace")
+	for _, tc := range []struct{ mode, plan, want string }{
+		{"comment", "  \n ", "plan input is empty"},
+		{"deploy", "plan.json", `mode must be comment or analyze, got "deploy"`},
+		{"comment", "/home/runner/work/_temp/plan.json", "outside the workspace"},
+	} {
+		t.Setenv("TOFU_PLAN_REVIEW_MODE", tc.mode)
+		t.Setenv("TOFU_PLAN_REVIEW_PLAN", tc.plan)
+		if _, err := run(t, "action"); err == nil || !strings.Contains(err.Error(), tc.want) {
+			t.Errorf("mode=%q plan=%q: err = %v, want %q", tc.mode, tc.plan, err, tc.want)
+		}
+	}
+}

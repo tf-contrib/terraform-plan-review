@@ -119,6 +119,9 @@ func showJSON(path, bin, dir string) ([]byte, error) {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	out, err := cmd.Output()
+	if errors.Is(err, exec.ErrNotFound) {
+		return nil, fmt.Errorf("%s is a binary plan file and %q was not found to convert it; pass the output of `tofu show -json` instead", path, bin)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("%s show -json %s: %w\n%s", bin, path, err, stderr.String())
 	}

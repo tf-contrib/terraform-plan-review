@@ -8,9 +8,8 @@ branding:
 inputs:
   plan:
     description: >
-      Plan file(s) to review, one per line: binary plans (converted with
-      `tofu show -json`), `tofu show -json` output, or reports written in
-      `analyze` mode.
+      JSON plan(s) to review, one per line, inside the workspace: the output
+      of `tofu show -json`, or reports written in `analyze` mode.
     required: true
   mode:
     description: >
@@ -18,16 +17,16 @@ inputs:
       redacted report to `report` for combining roots from a job matrix.
     default: comment
   working-directory:
-    description: Root module directory. Used to run `tofu show` and to resolve source locations.
+    description: Root module directory, used to resolve source locations.
     default: .
   name:
     description: "Display name of the root (default: working-directory)."
     default: ""
   report:
-    description: Path of the report written in `analyze` mode.
+    description: Path of the report written in `analyze` mode, inside the workspace.
     default: tofu-plan-review.json
   config:
-    description: "Rules file (default: .github/tofu/review.hcl in the repository root)."
+    description: "Rules file (default: .github/tofu/review.hcl)."
     default: ""
   id:
     description: Comment identifier. Use different ids for independent comments on the same pull request.
@@ -44,9 +43,6 @@ inputs:
   fail-on-block:
     description: Fail the step when a blocking rule matches and the override label is absent.
     default: "true"
-  tofu:
-    description: tofu binary used to convert binary plan files.
-    default: tofu
   github-token:
     description: "Token used to post the comment. Needs `pull-requests: write`."
     default: ${{ github.token }}
@@ -54,85 +50,35 @@ inputs:
 outputs:
   has-changes:
     description: Whether any root has changes.
-    value: ${{ steps.run.outputs.has-changes }}
   destructive:
     description: Whether any resource will be destroyed or replaced.
-    value: ${{ steps.run.outputs.destructive }}
   blocked:
     description: Whether a blocking rule matched without an override label.
-    value: ${{ steps.run.outputs.blocked }}
   to-add:
     description: Number of resources to create.
-    value: ${{ steps.run.outputs.to-add }}
   to-change:
     description: Number of resources to update in place.
-    value: ${{ steps.run.outputs.to-change }}
   to-replace:
     description: Number of resources to replace.
-    value: ${{ steps.run.outputs.to-replace }}
   to-destroy:
     description: Number of resources to destroy.
-    value: ${{ steps.run.outputs.to-destroy }}
 
 runs:
-  using: composite
-  steps:
-    - name: Install tofu-plan-review
-      id: install
-      shell: bash
-      env:
-        ACTION_REF: ${{ github.action_ref }}
-        ACTION_REPO: ${{ github.action_repository }}
-      run: '"$GITHUB_ACTION_PATH/scripts/install.sh"'
-
-    # Unreleased refs (@main, branches, `uses: ./`) build from source.
-    - if: steps.install.outputs.build == 'true'
-      uses: actions/setup-go@v7
-      with:
-        go-version-file: ${{ github.action_path }}/go.mod
-        cache-dependency-path: ${{ github.action_path }}/go.sum
-
-    - if: steps.install.outputs.build == 'true'
-      name: Build tofu-plan-review
-      shell: bash
-      run: go build -C "$GITHUB_ACTION_PATH" -trimpath -o "$RUNNER_TEMP/tofu-plan-review" ./cmd/tofu-plan-review
-
-    - name: Review plan
-      id: run
-      shell: bash
-      env:
-        INPUT_PLAN: ${{ inputs.plan }}
-        INPUT_MODE: ${{ inputs.mode }}
-        TOFU_PLAN_REVIEW_DIR: ${{ inputs.working-directory }}
-        TOFU_PLAN_REVIEW_NAME: ${{ inputs.name }}
-        TOFU_PLAN_REVIEW_OUT: ${{ inputs.report }}
-        TOFU_PLAN_REVIEW_CONFIG: ${{ inputs.config }}
-        TOFU_PLAN_REVIEW_ID: ${{ inputs.id }}
-        TOFU_PLAN_REVIEW_TITLE: ${{ inputs.title }}
-        TOFU_PLAN_REVIEW_ANNOTATE: ${{ inputs.annotate }}
-        TOFU_PLAN_REVIEW_SUMMARY: ${{ inputs.summary }}
-        TOFU_PLAN_REVIEW_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
-        TOFU_PLAN_REVIEW_TOFU: ${{ inputs.tofu }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-      run: |
-        set -euo pipefail
-        case "$INPUT_MODE" in
-          analyze | comment) ;;
-          *)
-            echo "::error::mode must be comment or analyze, got: $INPUT_MODE"
-            exit 1
-            ;;
-        esac
-
-        plans=()
-        while IFS= read -r line; do
-          line="${line#"${line%%[![:space:]]*}"}"
-          line="${line%"${line##*[![:space:]]}"}"
-          [[ -n "$line" ]] && plans+=("$line")
-        done <<< "$INPUT_PLAN"
-        if [[ ${#plans[@]} -eq 0 ]]; then
-          echo "::error::the plan input is empty"
-          exit 1
-        fi
-
-        "$RUNNER_TEMP/tofu-plan-review" "$INPUT_MODE" -- "${plans[@]}"
+  using: docker
+  # A FROM scratch image holding the static binary. release-please updates
+  # the tag on every release, so each ref runs the image it was released with.
+  image: docker://ghcr.io/tofu-contrib/tofu-plan-review:v0.1.0 # x-release-please-version
+  args: [action]
+  env:
+    TOFU_PLAN_REVIEW_MODE: ${{ inputs.mode }}
+    TOFU_PLAN_REVIEW_PLAN: ${{ inputs.plan }}
+    TOFU_PLAN_REVIEW_DIR: ${{ inputs.working-directory }}
+    TOFU_PLAN_REVIEW_NAME: ${{ inputs.name }}
+    TOFU_PLAN_REVIEW_OUT: ${{ inputs.report }}
+    TOFU_PLAN_REVIEW_CONFIG: ${{ inputs.config }}
+    TOFU_PLAN_REVIEW_ID: ${{ inputs.id }}
+    TOFU_PLAN_REVIEW_TITLE: ${{ inputs.title }}
+    TOFU_PLAN_REVIEW_ANNOTATE: ${{ inputs.annotate }}
+    TOFU_PLAN_REVIEW_SUMMARY: ${{ inputs.summary }}
+    TOFU_PLAN_REVIEW_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
+    GITHUB_TOKEN: ${{ inputs.github-token }}

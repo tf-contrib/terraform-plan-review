@@ -37,6 +37,9 @@ func TestFromEnvPullRequest(t *testing.T) {
 	if got := c.BlobURL(); got != "https://github.com/example/infra/blob/abc123" {
 		t.Errorf("BlobURL = %s", got)
 	}
+	if got := c.CommitURL(); got != "https://github.com/example/infra/commit/abc123" {
+		t.Errorf("CommitURL = %s", got)
+	}
 	if got := c.RunURL(); got != "https://github.com/example/infra/actions/runs/99" {
 		t.Errorf("RunURL = %s", got)
 	}

@@ -99,6 +99,14 @@ func (c *Context) BlobURL() string {
 	return fmt.Sprintf("%s/%s/blob/%s", c.ServerURL, c.Repository, c.Commit())
 }
 
+// CommitURL links to Commit.
+func (c *Context) CommitURL() string {
+	if c.Repository == "" || c.Commit() == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s/commit/%s", c.ServerURL, c.Repository, c.Commit())
+}
+
 // RunURL links to the current workflow run, whose page shows job summaries.
 func (c *Context) RunURL() string {
 	if c.Repository == "" || c.RunID == "" {

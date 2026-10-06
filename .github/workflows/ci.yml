@@ -72,12 +72,14 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  # The e2e jobs run the action the way users do (setup-opentofu, then the
-  # action) against the test fixtures, and post real comments on pull
-  # requests to this repository. Fork PRs get a read-only token, so they
-  # are skipped.
+  # The e2e jobs run the action the way users do, against the test fixtures,
+  # and post real comments on pull requests to this repository. action.yml
+  # points at the released image, so they first point it at an image built
+  # from this change's binary instead. Fork PRs get a read-only token, so
+  # they are skipped.
   e2e-single:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -87,18 +89,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Download Binary
+        uses: actions/download-artifact@v8
+        with:
+          name: tofu-plan-review-x86_64-linux
+          skip-decompress: true
+          path: dist/
+
+      - name: Use the Image of This Change
+        run: ./scripts/e2e-image.sh
+
       - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v2
+        uses: opentofu/setup-opentofu@v1
         with:
           tofu_wrapper: false
 
       - name: Plan the basic scenario
-        run: ./scripts/plan-scenario.sh basic "$RUNNER_TEMP/basic.json"
+        run: ./scripts/plan-scenario.sh basic e2e/basic.json
 
       - name: Review
         uses: ./
         with:
-          plan: ${{ runner.temp }}/basic.json
+          plan: e2e/basic.json
           working-directory: testdata/scenarios/basic/v2
           name: basic
           id: e2e-single
@@ -106,6 +118,7 @@ jobs:
 
   e2e-analyze:
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    needs: build
     strategy:
       matrix:
         include:
@@ -121,8 +134,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Download Binary
+        uses: actions/download-artifact@v8
+        with:
+          name: tofu-plan-review-x86_64-linux
+          skip-decompress: true
+          path: dist/
+
+      - name: Use the Image of This Change
+        run: ./scripts/e2e-image.sh
+
       - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v2
+        uses: opentofu/setup-opentofu@v1
         with:
           tofu_wrapper: false
 
@@ -130,26 +153,27 @@ jobs:
         env:
           ROOT: ${{ matrix.root }}
         run: |
+          mkdir -p e2e
           if [[ -d "testdata/scenarios/$ROOT" ]]; then
-            ./scripts/plan-scenario.sh "$ROOT" "$RUNNER_TEMP/plan.json"
+            ./scripts/plan-scenario.sh "$ROOT" e2e/plan.json
           else
-            cp "testdata/plans/$ROOT.json" "$RUNNER_TEMP/plan.json"
+            cp "testdata/plans/$ROOT.json" e2e/plan.json
           fi
 
       - name: Analyze
         uses: ./
         with:
           mode: analyze
-          plan: ${{ runner.temp }}/plan.json
+          plan: e2e/plan.json
           working-directory: ${{ matrix.dir }}
           name: ${{ matrix.root }}
           config: testdata/handwritten/database/rules.hcl
-          report: ${{ runner.temp }}/report-${{ matrix.root }}.json
+          report: e2e/report-${{ matrix.root }}.json
 
       - name: Upload Report
         uses: actions/upload-artifact@v7
         with:
-          path: ${{ runner.temp }}/report-${{ matrix.root }}.json
+          path: e2e/report-${{ matrix.root }}.json
           archive: false
           if-no-files-found: error
           retention-days: 1
@@ -164,6 +188,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Download Binary
+        uses: actions/download-artifact@v8
+        with:
+          name: tofu-plan-review-x86_64-linux
+          skip-decompress: true
+          path: dist/
+
+      - name: Use the Image of This Change
+        run: ./scripts/e2e-image.sh
 
       - name: Download Reports
         uses: actions/download-artifact@v8
@@ -267,8 +301,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    timeout-minutes: 10
+      packages: write
+    timeout-minutes: 15
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
       - name: Download Binaries
         uses: actions/download-artifact@v8
         with:
@@ -277,7 +317,7 @@ jobs:
           skip-decompress: true
           path: release/
 
-      # The action verifies downloads against this file.
+      # For users who download the binaries directly.
       - name: Write Checksums
         working-directory: release
         run: sha256sum tofu-plan-review-* > checksums.txt
@@ -287,3 +327,31 @@ jobs:
         with:
           tag_name: ${{ needs.release.outputs.tag_name }}
           files: release/*
+
+      # The image holds the same Nix-built binaries as the release assets,
+      # named by Docker architecture for the Dockerfile.
+      - name: Prepare Image Context
+        run: |
+          mkdir -p dist
+          install -m 0755 release/tofu-plan-review-x86_64-linux dist/tofu-plan-review-amd64
+          install -m 0755 release/tofu-plan-review-aarch64-linux dist/tofu-plan-review-arm64
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ needs.release.outputs.tag_name }}
+            ${{ env.IMAGE }}:latest

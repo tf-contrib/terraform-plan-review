@@ -9,6 +9,10 @@ import (
 	"runtime/debug"
 
 	"github.com/urfave/cli/v3"
+
+	// The Docker image is built FROM scratch and has no CA bundle; fall back
+	// to the roots embedded here when the system has none.
+	_ "golang.org/x/crypto/x509roots/fallback"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -50,6 +54,7 @@ variable, e.g. TOFU_PLAN_REVIEW_DIR for --dir.`,
 			NewAnalyze(),
 			NewRender(),
 			NewComment(),
+			NewAction(),
 		},
 	}
 }

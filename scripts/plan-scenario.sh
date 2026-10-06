@@ -5,6 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 scenario=testdata/scenarios/$1
 out=$2
+mkdir -p "$(dirname "$out")"
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 cp -R "$scenario/v1/." "$work/"

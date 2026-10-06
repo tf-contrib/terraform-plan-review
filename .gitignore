@@ -12,3 +12,7 @@ tfplan
 # Coverage
 *.out
 coverage.*
+
+# E2E plans and reports written by CI
+/e2e/
+/reports/
