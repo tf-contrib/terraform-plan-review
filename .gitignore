@@ -5,3 +5,10 @@
 .terraform/
 .terraform.lock.hcl
 tfplan
+
+# Nix
+/result
+
+# Coverage
+*.out
+coverage.*

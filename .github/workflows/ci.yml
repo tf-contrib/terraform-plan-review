@@ -1,0 +1,287 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Dependabot bumps go.sum but not the vendorHash in flake.nix. This pushes
+  # the new one with the App token, and the run that push triggers cancels
+  # this one through the concurrency group above. Workflows Dependabot
+  # triggers read Dependabot secrets only, so both values live there.
+  hash:
+    if: startsWith(github.head_ref, 'dependabot/go_modules/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 30
+    steps:
+      - name: Generate App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v23
+
+      - name: Update Dependency Hash
+        uses: nixos-contrib/nix-update-hash@main
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v23
+
+      - name: Check Formatting
+        run: nix develop --command bash -c 'test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }'
+
+      - name: Run Vet
+        run: nix develop --command go vet ./...
+
+      - name: Run Tests
+        run: |
+          nix develop --command go test -race \
+            -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Run Octocov
+        uses: k1LoW/octocov-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # The e2e jobs run the action the way users do (setup-opentofu, then the
+  # action) against the test fixtures, and post real comments on pull
+  # requests to this repository. Fork PRs get a read-only token, so they
+  # are skipped.
+  e2e-single:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+
+      - name: Plan the basic scenario
+        run: ./scripts/plan-scenario.sh basic "$RUNNER_TEMP/basic.json"
+
+      - name: Review
+        uses: ./
+        with:
+          plan: ${{ runner.temp }}/basic.json
+          working-directory: testdata/scenarios/basic/v2
+          name: basic
+          id: e2e-single
+          title: "E2E: single root"
+
+  e2e-analyze:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      matrix:
+        include:
+          - root: basic
+            dir: testdata/scenarios/basic/v2
+          - root: database
+            dir: testdata/handwritten/database
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+
+      - name: Plan
+        env:
+          ROOT: ${{ matrix.root }}
+        run: |
+          if [[ -d "testdata/scenarios/$ROOT" ]]; then
+            ./scripts/plan-scenario.sh "$ROOT" "$RUNNER_TEMP/plan.json"
+          else
+            cp "testdata/plans/$ROOT.json" "$RUNNER_TEMP/plan.json"
+          fi
+
+      - name: Analyze
+        uses: ./
+        with:
+          mode: analyze
+          plan: ${{ runner.temp }}/plan.json
+          working-directory: ${{ matrix.dir }}
+          name: ${{ matrix.root }}
+          config: testdata/handwritten/database/rules.hcl
+          report: ${{ runner.temp }}/report-${{ matrix.root }}.json
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ runner.temp }}/report-${{ matrix.root }}.json
+          archive: false
+          if-no-files-found: error
+          retention-days: 1
+
+  e2e-combine:
+    needs: e2e-analyze
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download Reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: report-*
+          merge-multiple: true
+          skip-decompress: true
+          path: reports/
+
+      - name: Review
+        uses: ./
+        with:
+          plan: |
+            reports/report-basic.json
+            reports/report-database.json
+          id: e2e-multi
+          title: "E2E: multiple roots"
+          # The database fixture is blocked by design.
+          fail-on-block: "false"
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            nix_system: x86_64-linux
+          - os: ubuntu-24.04-arm
+            nix_system: aarch64-linux
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    timeout-minutes: 60
+    env:
+      BIN_PATH: tofu-plan-review-${{ matrix.nix_system }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v23
+
+      - name: Setup Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v15
+        with:
+          use-flakehub: disabled
+          use-gha-cache: enabled
+
+      - name: Build with Nix
+        run: nix build . --system ${{ matrix.nix_system }}
+
+      - name: Prepare Binary
+        run: install -m 0755 result/bin/tofu-plan-review "$BIN_PATH"
+
+      # The action downloads this binary onto runners without Nix, so it
+      # must not reference the Nix store.
+      - name: Check Binary Is Static
+        run: |
+          file "$BIN_PATH"
+          file "$BIN_PATH" | grep -q 'statically linked'
+          "./$BIN_PATH" version
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ env.BIN_PATH }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 1
+
+  release:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Create Release PR
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          manifest-file: .github/config/release-please-manifest.json
+          config-file: .github/config/release-please-config.json
+          target-branch: main
+
+  publish:
+    needs: release
+    if: needs.release.outputs.release_created
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 10
+    steps:
+      - name: Download Binaries
+        uses: actions/download-artifact@v8
+        with:
+          pattern: tofu-plan-review-*
+          merge-multiple: true
+          skip-decompress: true
+          path: release/
+
+      # The action verifies downloads against this file.
+      - name: Write Checksums
+        working-directory: release
+        run: sha256sum tofu-plan-review-* > checksums.txt
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.release.outputs.tag_name }}
+          files: release/*
