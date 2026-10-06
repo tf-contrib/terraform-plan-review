@@ -27,7 +27,7 @@ inputs:
     description: Path of the report written in `analyze` mode.
     default: tofu-plan-review.json
   config:
-    description: "Rules file (default: .tofu-plan-review.hcl in the repository root)."
+    description: "Rules file (default: .github/tofu/review.hcl in the repository root)."
     default: ""
   id:
     description: Comment identifier. Use different ids for independent comments on the same pull request.
@@ -103,22 +103,26 @@ runs:
       env:
         INPUT_PLAN: ${{ inputs.plan }}
         INPUT_MODE: ${{ inputs.mode }}
-        INPUT_DIR: ${{ inputs.working-directory }}
-        INPUT_NAME: ${{ inputs.name }}
-        INPUT_REPORT: ${{ inputs.report }}
-        INPUT_CONFIG: ${{ inputs.config }}
-        INPUT_ID: ${{ inputs.id }}
-        INPUT_TITLE: ${{ inputs.title }}
-        INPUT_ANNOTATE: ${{ inputs.annotate }}
-        INPUT_SUMMARY: ${{ inputs.summary }}
-        INPUT_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
-        INPUT_TOFU: ${{ inputs.tofu }}
+        TOFU_PLAN_REVIEW_DIR: ${{ inputs.working-directory }}
+        TOFU_PLAN_REVIEW_NAME: ${{ inputs.name }}
+        TOFU_PLAN_REVIEW_OUT: ${{ inputs.report }}
+        TOFU_PLAN_REVIEW_CONFIG: ${{ inputs.config }}
+        TOFU_PLAN_REVIEW_ID: ${{ inputs.id }}
+        TOFU_PLAN_REVIEW_TITLE: ${{ inputs.title }}
+        TOFU_PLAN_REVIEW_ANNOTATE: ${{ inputs.annotate }}
+        TOFU_PLAN_REVIEW_SUMMARY: ${{ inputs.summary }}
+        TOFU_PLAN_REVIEW_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
+        TOFU_PLAN_REVIEW_TOFU: ${{ inputs.tofu }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
-        args=(-dir "$INPUT_DIR" -tofu "$INPUT_TOFU")
-        [[ -n "$INPUT_NAME" ]] && args+=(-name "$INPUT_NAME")
-        [[ -n "$INPUT_CONFIG" ]] && args+=(-config "$INPUT_CONFIG")
+        case "$INPUT_MODE" in
+          analyze | comment) ;;
+          *)
+            echo "::error::mode must be comment or analyze, got: $INPUT_MODE"
+            exit 1
+            ;;
+        esac
 
         plans=()
         while IFS= read -r line; do
@@ -131,24 +135,4 @@ runs:
           exit 1
         fi
 
-        bin="$RUNNER_TEMP/tofu-plan-review"
-        case "$INPUT_MODE" in
-          analyze)
-            if [[ ${#plans[@]} -ne 1 ]]; then
-              echo "::error::analyze mode takes exactly one plan"
-              exit 1
-            fi
-            "$bin" analyze "${args[@]}" -out "$INPUT_REPORT" "${plans[0]}"
-            ;;
-          comment)
-            "$bin" comment "${args[@]}" \
-              -id "$INPUT_ID" -title "$INPUT_TITLE" \
-              -annotate="$INPUT_ANNOTATE" -summary="$INPUT_SUMMARY" \
-              -fail-on-block="$INPUT_FAIL_ON_BLOCK" \
-              "${plans[@]}"
-            ;;
-          *)
-            echo "::error::mode must be comment or analyze, got: $INPUT_MODE"
-            exit 1
-            ;;
-        esac
+        "$RUNNER_TEMP/tofu-plan-review" "$INPUT_MODE" -- "${plans[@]}"

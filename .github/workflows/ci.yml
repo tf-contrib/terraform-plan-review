@@ -223,7 +223,7 @@ jobs:
         run: |
           file "$BIN_PATH"
           file "$BIN_PATH" | grep -q 'statically linked'
-          "./$BIN_PATH" version
+          "./$BIN_PATH" --version
 
       - name: Upload Binary
         uses: actions/upload-artifact@v7

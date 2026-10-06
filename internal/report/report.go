@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"slices"
 	"sort"
@@ -343,11 +344,22 @@ func (r *Report) Blocked() []Change {
 
 // Write saves the report as JSON.
 func (r *Report) Write(path string) error {
-	data, err := json.MarshalIndent(r, "", "  ")
+	f, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, append(data, '\n'), 0o644)
+	if err := r.Encode(f); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
+}
+
+// Encode writes the report as JSON.
+func (r *Report) Encode(w io.Writer) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(r)
 }
 
 // IsReport reports whether data is a report file rather than a plan.

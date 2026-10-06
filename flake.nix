@@ -20,7 +20,7 @@
           inherit version;
           src = pkgs.lib.cleanSource ./.;
           subPackages = [ "cmd/tofu-plan-review" ];
-          vendorHash = "sha256-9wKX0SF/uwKZpQyFTQNbPfb/9rsJUBiVvzMuG2ZYleM=";
+          vendorHash = "sha256-9GDJwS4gSmaIzJE6VUGnZjrbRDdFwj8r+6cHN3jcdVg=";
           env.CGO_ENABLED = 0;
           ldflags = [
             "-s"
