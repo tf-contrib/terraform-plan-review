@@ -4,7 +4,7 @@ go 1.26.7
 
 require (
 	github.com/hashicorp/hcl/v2 v2.25.0
-	github.com/urfave/cli/v3 v3.13.0
+	github.com/urfave/cli/v3 v3.14.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20261005185213-c3db4df58582
 )
 
