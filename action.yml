@@ -1,5 +1,5 @@
 name: OpenTofu Plan Review
-description: Readable OpenTofu plan reviews on pull requests, with source annotations, change tracking between pushes and policy rules.
+description: Readable OpenTofu plan reviews on pull requests, with source annotations, change tracking between pushes and policy rules. Linux runners only.
 author: tofu-contrib
 branding:
   icon: git-pull-request
@@ -77,13 +77,23 @@ outputs:
 runs:
   using: composite
   steps:
-    # TODO: download a prebuilt release binary instead of building.
-    - uses: actions/setup-go@v6
+    - name: Install tofu-plan-review
+      id: install
+      shell: bash
+      env:
+        ACTION_REF: ${{ github.action_ref }}
+        ACTION_REPO: ${{ github.action_repository }}
+      run: '"$GITHUB_ACTION_PATH/scripts/install.sh"'
+
+    # Unreleased refs (@main, branches, `uses: ./`) build from source.
+    - if: steps.install.outputs.build == 'true'
+      uses: actions/setup-go@v6
       with:
         go-version-file: ${{ github.action_path }}/go.mod
         cache-dependency-path: ${{ github.action_path }}/go.sum
 
-    - name: Build tofu-plan-review
+    - if: steps.install.outputs.build == 'true'
+      name: Build tofu-plan-review
       shell: bash
       run: go build -C "$GITHUB_ACTION_PATH" -trimpath -o "$RUNNER_TEMP/tofu-plan-review" ./cmd/tofu-plan-review
 

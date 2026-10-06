@@ -27,7 +27,7 @@ reviewers what matters:
   unmarked attribute is redacted too.
 
 Terraform JSON plans use the same format and should work too, but are not
-tested yet.
+tested yet. The action runs on Linux runners (x86-64 and ARM64).
 
 ## Quick start
 
@@ -196,12 +196,18 @@ tofu-plan-review render tfplan > review.md
   nothing.
 - Content-based redaction skips sensitive values shorter than 4 characters
   to avoid redacting unrelated text.
-- The action builds the binary with Go on first use (about 20 seconds).
-  Prebuilt release binaries are planned.
+- Linux runners only. At a release tag (`@vX.Y.Z`, or that tag's commit
+  SHA) the action downloads the release binary and verifies its checksum.
+  At other refs, such as `@main`, it builds from source with Go (about 20
+  seconds).
 
 ## Development
 
+The toolchain (Go, OpenTofu) comes from the Nix flake: run `nix develop`, or
+open the repository in the devcontainer.
+
 ```sh
+nix build                          # build the binary into ./result
 go test ./...
 go test ./internal/render -update  # rewrite golden files after rendering changes
 ./scripts/gen-fixtures.sh          # regenerate plans from testdata/scenarios
