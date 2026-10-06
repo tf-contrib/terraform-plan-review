@@ -111,7 +111,7 @@ jobs:
 
 ## Rules
 
-Put rules in `.tofu-plan-review.hcl` at the repository root:
+Put rules in `.github/tofu/review.hcl`:
 
 ```hcl
 # Adding this label to the pull request downgrades blocks to warnings.
@@ -164,7 +164,7 @@ without a new push.
 | `working-directory` | `.`                    | Root module directory                                                    |
 | `name`              | `working-directory`    | Display name of the root                                                 |
 | `report`            | `tofu-plan-review.json`| Report path in `analyze` mode                                            |
-| `config`            | `.tofu-plan-review.hcl`| Rules file                                                               |
+| `config`            | `.github/tofu/review.hcl` | Rules file                                                            |
 | `id`                | `default`              | Comment identifier, for independent comments on one pull request         |
 | `title`             | `OpenTofu plan`        | Comment title                                                            |
 | `annotate`          | `true`                 | Annotate source lines in the pull request diff                           |
@@ -184,6 +184,10 @@ go install github.com/tofu-contrib/tofu-plan-review/cmd/tofu-plan-review@latest
 tofu plan -out=tfplan
 tofu-plan-review render tfplan > review.md
 ```
+
+Run `tofu-plan-review <command> --help` for all options. Every option can also
+be set with a `TOFU_PLAN_REVIEW_<OPTION>` environment variable, e.g.
+`TOFU_PLAN_REVIEW_CONFIG` for `--config`.
 
 ## Notes and limitations
 

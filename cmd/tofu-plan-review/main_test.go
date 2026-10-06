@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -109,31 +111,23 @@ func readOutputs(t *testing.T, path string) map[string]string {
 	return out
 }
 
-// captureStdout returns what fn prints, where annotations go.
-func captureStdout(t *testing.T, fn func() error) (string, error) {
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	old := os.Stdout
-	os.Stdout = w
-	done := make(chan string)
-	go func() {
-		b, _ := io.ReadAll(r)
-		done <- string(b)
-	}()
-	runErr := fn()
-	os.Stdout = old
-	w.Close()
-	return <-done, runErr
+// run executes the CLI and returns what it wrote to stdout, where
+// annotations and dry-run output go.
+func run(t *testing.T, args ...string) (string, error) {
+	t.Helper()
+	var stdout bytes.Buffer
+	app := NewApp()
+	app.Writer = &stdout
+	err := app.Run(context.Background(), append([]string{"tofu-plan-review"}, args...))
+	return stdout.String(), err
 }
 
 func TestCommentCreatesThenUpdates(t *testing.T) {
 	gh := newFakeGitHub(t)
 	outputs, summary := actionsEnv(t, gh.server.URL)
-	args := []string{"-dir", basicDir, "-repo-root", "../..", "-name", "basic", basicPlan}
+	args := []string{"--dir", basicDir, "--repo-root", "../..", "--name", "basic", basicPlan}
 
-	stdout, err := captureStdout(t, func() error { return runComment(args) })
+	stdout, err := run(t, append([]string{"comment"}, args...)...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +157,7 @@ func TestCommentCreatesThenUpdates(t *testing.T) {
 
 	// Second run on the same PR: the comment is updated, not duplicated,
 	// and says the plan did not change.
-	if _, err := captureStdout(t, func() error { return runComment(args) }); err != nil {
+	if _, err := run(t, append([]string{"comment"}, args...)...); err != nil {
 		t.Fatal(err)
 	}
 	if len(gh.comments) != 1 {
@@ -180,9 +174,9 @@ func TestCommentCreatesThenUpdates(t *testing.T) {
 func TestCommentBlocked(t *testing.T) {
 	gh := newFakeGitHub(t)
 	outputs, _ := actionsEnv(t, gh.server.URL)
-	args := []string{"-dir", databaseDir, "-repo-root", "../..", "-config", rules, databasePlan}
+	args := []string{"--dir", databaseDir, "--repo-root", "../..", "--config", rules, databasePlan}
 
-	stdout, err := captureStdout(t, func() error { return runComment(args) })
+	stdout, err := run(t, append([]string{"comment"}, args...)...)
 	var blocked errBlocked
 	if !errors.As(err, &blocked) || blocked.n != 1 {
 		t.Fatalf("err = %v", err)
@@ -201,9 +195,9 @@ func TestCommentBlocked(t *testing.T) {
 func TestCommentOverrideLabel(t *testing.T) {
 	gh := newFakeGitHub(t)
 	outputs, _ := actionsEnv(t, gh.server.URL, "destroy-approved")
-	args := []string{"-dir", databaseDir, "-repo-root", "../..", "-config", rules, databasePlan}
+	args := []string{"--dir", databaseDir, "--repo-root", "../..", "--config", rules, databasePlan}
 
-	if _, err := captureStdout(t, func() error { return runComment(args) }); err != nil {
+	if _, err := run(t, append([]string{"comment"}, args...)...); err != nil {
 		t.Fatalf("override label should unblock: %v", err)
 	}
 	if readOutputs(t, outputs)["blocked"] != "false" {
@@ -218,9 +212,7 @@ func TestCommentWithoutPullRequest(t *testing.T) {
 	t.Setenv("GITHUB_EVENT_PATH", "")
 	t.Setenv("GITHUB_OUTPUT", "")
 	t.Setenv("GITHUB_STEP_SUMMARY", "")
-	_, err := captureStdout(t, func() error {
-		return runComment([]string{"-dir", basicDir, "-repo-root", "../..", "-annotate=false", basicPlan})
-	})
+	_, err := run(t, "comment", "--dir", basicDir, "--repo-root", "../..", "--annotate=false", basicPlan)
 	if err != nil {
 		t.Fatalf("outside a PR the comment is skipped, not an error: %v", err)
 	}
@@ -229,13 +221,13 @@ func TestCommentWithoutPullRequest(t *testing.T) {
 func TestAnalyzeThenCombine(t *testing.T) {
 	dir := t.TempDir()
 	reports := map[string][]string{
-		"basic":    {"-dir", basicDir, "-name", "basic", basicPlan},
-		"database": {"-dir", databaseDir, "-name", "database", "-config", rules, databasePlan},
+		"basic":    {"--dir", basicDir, "--name", "basic", basicPlan},
+		"database": {"--dir", databaseDir, "--name", "database", "--config", rules, databasePlan},
 	}
 	var paths []string
 	for name, args := range reports {
 		out := filepath.Join(dir, name+".json")
-		if err := runAnalyze(append([]string{"-repo-root", "../..", "-out", out}, args...)); err != nil {
+		if _, err := run(t, append([]string{"analyze", "--repo-root", "../..", "--out", out}, args...)...); err != nil {
 			t.Fatal(err)
 		}
 		data, _ := os.ReadFile(out)
@@ -244,24 +236,69 @@ func TestAnalyzeThenCombine(t *testing.T) {
 		}
 		paths = append(paths, out)
 	}
-	var sb strings.Builder
-	if err := runRender(paths, &sb); err != nil {
+	out, err := run(t, append([]string{"render"}, paths...)...)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(sb.String(), "| `basic` |") || !strings.Contains(sb.String(), "| `database` |") {
-		t.Errorf("combined render should have a row per root:\n%s", sb.String())
+	if !strings.Contains(out, "| `basic` |") || !strings.Contains(out, "| `database` |") {
+		t.Errorf("combined render should have a row per root:\n%s", out)
 	}
 }
 
 func TestDuplicateRootNames(t *testing.T) {
-	_, err := loadInputs([]string{basicPlan, basicPlan}, &analyzeFlags{dir: basicDir, repoRoot: "../..", name: "same"})
+	_, err := (&analyzer{dir: basicDir, repoRoot: "../..", name: "same"}).load([]string{basicPlan, basicPlan})
 	if err == nil || !strings.Contains(err.Error(), "duplicate root name") {
 		t.Errorf("err = %v", err)
 	}
 }
 
 func TestNoInputs(t *testing.T) {
-	if _, err := loadInputs(nil, &analyzeFlags{}); err == nil {
+	if _, err := (&analyzer{}).load(nil); err == nil {
 		t.Error("expected an error")
+	}
+}
+
+func TestEnvironmentVariables(t *testing.T) {
+	t.Setenv("TOFU_PLAN_REVIEW_DIR", basicDir)
+	t.Setenv("TOFU_PLAN_REVIEW_REPO_ROOT", "../..")
+	t.Setenv("TOFU_PLAN_REVIEW_TITLE", "From env")
+	out, err := run(t, "render", "--", basicPlan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "### 🔴 From env:") {
+		t.Errorf("title from TOFU_PLAN_REVIEW_TITLE not applied:\n%s", out[:min(len(out), 300)])
+	}
+	if !strings.Contains(out, "testdata/scenarios/basic/v2/main.tf") && !strings.Contains(out, "terraform_data.server") {
+		t.Error("dir from TOFU_PLAN_REVIEW_DIR not applied")
+	}
+}
+
+func TestAnalyzeRequiresOnePlan(t *testing.T) {
+	if _, err := run(t, "analyze", basicPlan, basicPlan); err == nil || !strings.Contains(err.Error(), "exactly one") {
+		t.Errorf("err = %v", err)
+	}
+}
+
+func TestDefaultConfigPath(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, ".github", "tofu"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	rules := `rule "no-deletes" {
+  severity = "block"
+  actions  = ["delete"]
+}
+`
+	if err := os.WriteFile(filepath.Join(root, ".github", "tofu", "review.hcl"), []byte(rules), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	plan, _ := filepath.Abs(basicPlan)
+	out, err := run(t, "render", "--dir", root, "--repo-root", root, plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Blocked by policy") {
+		t.Error("rules in .github/tofu/review.hcl should be loaded by default")
 	}
 }

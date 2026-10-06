@@ -1,4 +1,4 @@
-// Package policy loads review rules from .tofu-plan-review.hcl.
+// Package policy loads review rules from .github/tofu/review.hcl.
 //
 //	override_label = "destroy-approved"
 //
@@ -27,7 +27,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
-const DefaultFile = ".tofu-plan-review.hcl"
+// DefaultFile is where rules are read from, relative to the repository root.
+const DefaultFile = ".github/tofu/review.hcl"
 
 type Severity string
 
