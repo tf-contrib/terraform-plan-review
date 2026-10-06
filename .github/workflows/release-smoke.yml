@@ -1,0 +1,29 @@
+name: Release smoke test
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+        ref: [tag, sha]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - if: matrix.ref == 'tag'
+        uses: tofu-contrib/tofu-plan-review@v0.1.0
+        with:
+          plan: testdata/plans/basic.json
+          working-directory: testdata/scenarios/basic/v2
+          id: smoke-${{ matrix.os }}-${{ matrix.ref }}
+          title: "Smoke: v0.1.0 by ${{ matrix.ref }} on ${{ matrix.os }}"
+      - if: matrix.ref == 'sha'
+        uses: tofu-contrib/tofu-plan-review@ffc45ee9c4f2dbd9e52841449b677c1f2badc68a # v0.1.0
+        with:
+          plan: testdata/plans/basic.json
+          working-directory: testdata/scenarios/basic/v2
+          id: smoke-${{ matrix.os }}-${{ matrix.ref }}
+          title: "Smoke: v0.1.0 by ${{ matrix.ref }} on ${{ matrix.os }}"
