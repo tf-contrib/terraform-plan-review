@@ -21,13 +21,13 @@ inputs:
     description: Root module directory. Used to run `tofu show` and to resolve source locations.
     default: .
   name:
-    description: Display name of the root (default: working-directory).
+    description: "Display name of the root (default: working-directory)."
     default: ""
   report:
     description: Path of the report written in `analyze` mode.
     default: tofu-plan-review.json
   config:
-    description: Rules file (default: .tofu-plan-review.hcl in the repository root).
+    description: "Rules file (default: .tofu-plan-review.hcl in the repository root)."
     default: ""
   id:
     description: Comment identifier. Use different ids for independent comments on the same pull request.
@@ -48,7 +48,7 @@ inputs:
     description: tofu binary used to convert binary plan files.
     default: tofu
   github-token:
-    description: Token used to post the comment. Needs `pull-requests: write`.
+    description: "Token used to post the comment. Needs `pull-requests: write`."
     default: ${{ github.token }}
 
 outputs:
