@@ -124,7 +124,7 @@ jobs:
 
 ## Rules
 
-Put rules in `.github/tofu/review.hcl`:
+Put rules in `.github/tofu-plan-review.hcl`:
 
 ```hcl
 # Adding this label to the pull request downgrades blocks to warnings.
@@ -177,7 +177,7 @@ without a new push.
 | `working-directory` | `.`                    | Root module directory                                                    |
 | `name`              | `working-directory`    | Display name of the root                                                 |
 | `report`            | `tofu-plan-review.json`| Report path in `analyze` mode                                            |
-| `config`            | `.github/tofu/review.hcl` | Rules file                                                            |
+| `config`            | `.github/tofu-plan-review.hcl` | Rules file; a missing path is an error, a missing default means no rules |
 | `id`                | `default`              | Comment identifier, for independent comments on one pull request         |
 | `title`             | `OpenTofu plan`        | Comment title                                                            |
 | `annotate`          | `true`                 | Annotate source lines in the pull request diff                           |

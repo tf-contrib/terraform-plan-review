@@ -26,7 +26,7 @@ inputs:
     description: Path of the report written in `analyze` mode, inside the workspace.
     default: tofu-plan-review.json
   config:
-    description: "Rules file (default: .github/tofu/review.hcl)."
+    description: "Rules file (default: .github/tofu-plan-review.hcl)."
     default: ""
   id:
     description: Comment identifier. Use different ids for independent comments on the same pull request.

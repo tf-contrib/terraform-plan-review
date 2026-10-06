@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
 )
 
 const (
@@ -281,25 +283,42 @@ func TestAnalyzeRequiresOnePlan(t *testing.T) {
 }
 
 func TestDefaultConfigPath(t *testing.T) {
-	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, ".github", "tofu"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	rules := `rule "no-deletes" {
+	for _, file := range []string{policy.DefaultFile, policy.LegacyFile} {
+		t.Run(file, func(t *testing.T) {
+			root := t.TempDir()
+			path := filepath.Join(root, file)
+			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			rules := `rule "no-deletes" {
   severity = "block"
   actions  = ["delete"]
 }
 `
-	if err := os.WriteFile(filepath.Join(root, ".github", "tofu", "review.hcl"), []byte(rules), 0o644); err != nil {
-		t.Fatal(err)
+			if err := os.WriteFile(path, []byte(rules), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			plan, _ := filepath.Abs(basicPlan)
+			out, err := run(t, "render", "--dir", root, "--repo-root", root, plan)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(out, "Blocked by policy") {
+				t.Errorf("rules in %s should be loaded by default", file)
+			}
+		})
 	}
+}
+
+func TestMissingConfig(t *testing.T) {
+	root := t.TempDir()
 	plan, _ := filepath.Abs(basicPlan)
-	out, err := run(t, "render", "--dir", root, "--repo-root", root, plan)
-	if err != nil {
-		t.Fatal(err)
+	if _, err := run(t, "render", "--dir", root, "--repo-root", root, plan); err != nil {
+		t.Errorf("a missing default rules file should mean no rules: %v", err)
 	}
-	if !strings.Contains(out, "Blocked by policy") {
-		t.Error("rules in .github/tofu/review.hcl should be loaded by default")
+	missing := filepath.Join(root, "nope.hcl")
+	if _, err := run(t, "render", "--dir", root, "--repo-root", root, "--config", missing, plan); err == nil {
+		t.Error("a missing --config file should be an error")
 	}
 }
 
