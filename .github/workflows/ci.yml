@@ -14,7 +14,9 @@ jobs:
   # Dependabot bumps go.sum but not the vendorHash in flake.nix. This pushes
   # the new one with the App token, and the run that push triggers cancels
   # this one through the concurrency group above. Workflows Dependabot
-  # triggers read Dependabot secrets only, so both values live there.
+  # triggers get Dependabot secrets instead of Actions secrets, so the App
+  # private key must be a Dependabot secret. Actions variables are still
+  # available, and the client ID is not confidential, so it is a variable.
   hash:
     if: startsWith(github.head_ref, 'dependabot/go_modules/')
     runs-on: ubuntu-latest
@@ -26,7 +28,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ secrets.APP_CLIENT_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout
