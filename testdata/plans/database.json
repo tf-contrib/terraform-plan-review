@@ -1,0 +1,102 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.13.1",
+  "complete": false,
+  "errored": false,
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.main",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "main",
+      "change": {
+        "actions": ["create", "delete"],
+        "before": {"identifier": "orders-v1", "instance_class": "db.t3.micro", "password": "fake-db-password-1", "arn": "arn:aws:rds:us-east-1:000000000000:db:orders-v1"},
+        "after": {"identifier": "orders-v2", "instance_class": "db.t3.small", "password": "fake-db-password-1"},
+        "after_unknown": {"arn": true},
+        "before_sensitive": {"password": true},
+        "after_sensitive": {"password": true},
+        "replace_paths": [["identifier"]]
+      },
+      "action_reason": "replace_because_cannot_update"
+    },
+    {
+      "address": "aws_s3_bucket.logs",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "logs",
+      "change": {
+        "actions": ["update"],
+        "before": {"bucket": "example-logs", "tags": {"team": "data"}, "tags_all": {"team": "data"}},
+        "after": {"bucket": "example-logs", "tags": {"team": "platform"}, "tags_all": {"team": "platform"}},
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_instance.web",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "web",
+      "change": {
+        "actions": ["update"],
+        "before": {"ami": "ami-00000000000000000", "tags_all": {"env": "dev"}},
+        "after": {"ami": "ami-00000000000000000", "tags_all": {"env": "dev", "cost-center": "000"}},
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_iam_role.ci",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "ci",
+      "change": {
+        "actions": ["no-op"],
+        "before": {"name": "ci-role"},
+        "after": {"name": "ci-role"},
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {},
+        "importing": {"id": "ci-role"}
+      }
+    },
+    {
+      "address": "data.aws_iam_policy_document.assume",
+      "mode": "data",
+      "type": "aws_iam_policy_document",
+      "name": "assume",
+      "change": {
+        "actions": ["read"],
+        "before": null,
+        "after": {},
+        "after_unknown": {"json": true},
+        "before_sensitive": false,
+        "after_sensitive": {}
+      },
+      "action_reason": "read_because_config_unknown"
+    }
+  ],
+  "resource_drift": [
+    {
+      "address": "aws_security_group.web",
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "web",
+      "change": {
+        "actions": ["update"],
+        "before": {"ingress": [{"cidr_blocks": ["10.0.0.0/16"], "from_port": 443}]},
+        "after": {"ingress": [{"cidr_blocks": ["0.0.0.0/0"], "from_port": 443}]},
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ],
+  "output_changes": {
+    "db_password": {"actions": ["update"], "before": "fake-db-password-0", "after": "fake-db-password-1", "after_unknown": false, "before_sensitive": true, "after_sensitive": true}
+  },
+  "configuration": {"root_module": {}}
+}

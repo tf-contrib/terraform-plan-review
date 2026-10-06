@@ -1,0 +1,144 @@
+name: OpenTofu Plan Review
+description: Readable OpenTofu plan reviews on pull requests, with source annotations, change tracking between pushes and policy rules.
+author: tofu-contrib
+branding:
+  icon: git-pull-request
+  color: purple
+
+inputs:
+  plan:
+    description: >
+      Plan file(s) to review, one per line: binary plans (converted with
+      `tofu show -json`), `tofu show -json` output, or reports written in
+      `analyze` mode.
+    required: true
+  mode:
+    description: >
+      `comment` posts the review on the pull request. `analyze` writes a
+      redacted report to `report` for combining roots from a job matrix.
+    default: comment
+  working-directory:
+    description: Root module directory. Used to run `tofu show` and to resolve source locations.
+    default: .
+  name:
+    description: Display name of the root (default: working-directory).
+    default: ""
+  report:
+    description: Path of the report written in `analyze` mode.
+    default: tofu-plan-review.json
+  config:
+    description: Rules file (default: .tofu-plan-review.hcl in the repository root).
+    default: ""
+  id:
+    description: Comment identifier. Use different ids for independent comments on the same pull request.
+    default: default
+  title:
+    description: Comment title.
+    default: OpenTofu plan
+  annotate:
+    description: Annotate changed resources on their source lines in the pull request diff.
+    default: "true"
+  summary:
+    description: Write the full review to the job summary.
+    default: "true"
+  fail-on-block:
+    description: Fail the step when a blocking rule matches and the override label is absent.
+    default: "true"
+  tofu:
+    description: tofu binary used to convert binary plan files.
+    default: tofu
+  github-token:
+    description: Token used to post the comment. Needs `pull-requests: write`.
+    default: ${{ github.token }}
+
+outputs:
+  has-changes:
+    description: Whether any root has changes.
+    value: ${{ steps.run.outputs.has-changes }}
+  destructive:
+    description: Whether any resource will be destroyed or replaced.
+    value: ${{ steps.run.outputs.destructive }}
+  blocked:
+    description: Whether a blocking rule matched without an override label.
+    value: ${{ steps.run.outputs.blocked }}
+  to-add:
+    description: Number of resources to create.
+    value: ${{ steps.run.outputs.to-add }}
+  to-change:
+    description: Number of resources to update in place.
+    value: ${{ steps.run.outputs.to-change }}
+  to-replace:
+    description: Number of resources to replace.
+    value: ${{ steps.run.outputs.to-replace }}
+  to-destroy:
+    description: Number of resources to destroy.
+    value: ${{ steps.run.outputs.to-destroy }}
+
+runs:
+  using: composite
+  steps:
+    # TODO: download a prebuilt release binary instead of building.
+    - uses: actions/setup-go@v6
+      with:
+        go-version-file: ${{ github.action_path }}/go.mod
+        cache-dependency-path: ${{ github.action_path }}/go.sum
+
+    - name: Build tofu-plan-review
+      shell: bash
+      run: go build -C "$GITHUB_ACTION_PATH" -trimpath -o "$RUNNER_TEMP/tofu-plan-review" ./cmd/tofu-plan-review
+
+    - name: Review plan
+      id: run
+      shell: bash
+      env:
+        INPUT_PLAN: ${{ inputs.plan }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_DIR: ${{ inputs.working-directory }}
+        INPUT_NAME: ${{ inputs.name }}
+        INPUT_REPORT: ${{ inputs.report }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_ID: ${{ inputs.id }}
+        INPUT_TITLE: ${{ inputs.title }}
+        INPUT_ANNOTATE: ${{ inputs.annotate }}
+        INPUT_SUMMARY: ${{ inputs.summary }}
+        INPUT_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
+        INPUT_TOFU: ${{ inputs.tofu }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        args=(-dir "$INPUT_DIR" -tofu "$INPUT_TOFU")
+        [[ -n "$INPUT_NAME" ]] && args+=(-name "$INPUT_NAME")
+        [[ -n "$INPUT_CONFIG" ]] && args+=(-config "$INPUT_CONFIG")
+
+        plans=()
+        while IFS= read -r line; do
+          line="${line#"${line%%[![:space:]]*}"}"
+          line="${line%"${line##*[![:space:]]}"}"
+          [[ -n "$line" ]] && plans+=("$line")
+        done <<< "$INPUT_PLAN"
+        if [[ ${#plans[@]} -eq 0 ]]; then
+          echo "::error::the plan input is empty"
+          exit 1
+        fi
+
+        bin="$RUNNER_TEMP/tofu-plan-review"
+        case "$INPUT_MODE" in
+          analyze)
+            if [[ ${#plans[@]} -ne 1 ]]; then
+              echo "::error::analyze mode takes exactly one plan"
+              exit 1
+            fi
+            "$bin" analyze "${args[@]}" -out "$INPUT_REPORT" "${plans[0]}"
+            ;;
+          comment)
+            "$bin" comment "${args[@]}" \
+              -id "$INPUT_ID" -title "$INPUT_TITLE" \
+              -annotate="$INPUT_ANNOTATE" -summary="$INPUT_SUMMARY" \
+              -fail-on-block="$INPUT_FAIL_ON_BLOCK" \
+              "${plans[@]}"
+            ;;
+          *)
+            echo "::error::mode must be comment or analyze, got: $INPUT_MODE"
+            exit 1
+            ;;
+        esac
