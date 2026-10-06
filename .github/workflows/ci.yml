@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - run: go vet ./...
+      - run: go test -race ./...
+
+  # Runs the action against the test fixtures and posts real comments on
+  # pull requests to this repository. Fork PRs get a read-only token, so
+  # they are skipped.
+  e2e-single:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+      - name: Plan the basic scenario
+        run: ./scripts/plan-scenario.sh basic "$RUNNER_TEMP/basic.json"
+      - uses: ./
+        with:
+          plan: ${{ runner.temp }}/basic.json
+          working-directory: testdata/scenarios/basic/v2
+          name: basic
+          id: e2e-single
+          title: "E2E: single root"
+
+  e2e-analyze:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - root: basic
+            dir: testdata/scenarios/basic/v2
+          - root: database
+            dir: testdata/handwritten/database
+    steps:
+      - uses: actions/checkout@v5
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+      - name: Plan
+        run: |
+          if [[ -d testdata/scenarios/${{ matrix.root }} ]]; then
+            ./scripts/plan-scenario.sh ${{ matrix.root }} "$RUNNER_TEMP/plan.json"
+          else
+            cp testdata/plans/${{ matrix.root }}.json "$RUNNER_TEMP/plan.json"
+          fi
+      - uses: ./
+        with:
+          mode: analyze
+          plan: ${{ runner.temp }}/plan.json
+          working-directory: ${{ matrix.dir }}
+          name: ${{ matrix.root }}
+          config: testdata/handwritten/database/rules.hcl
+          report: ${{ runner.temp }}/report-${{ matrix.root }}.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: report-${{ matrix.root }}
+          path: ${{ runner.temp }}/report-${{ matrix.root }}.json
+
+  e2e-combine:
+    needs: e2e-analyze
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: report-*
+          merge-multiple: true
+          path: reports
+      - uses: ./
+        with:
+          plan: |
+            reports/report-basic.json
+            reports/report-database.json
+          id: e2e-multi
+          title: "E2E: multiple roots"
+          # The database fixture is blocked by design.
+          fail-on-block: "false"
