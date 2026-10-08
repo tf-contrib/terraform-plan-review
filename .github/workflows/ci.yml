@@ -92,7 +92,7 @@ jobs:
       - name: Download Binary
         uses: actions/download-artifact@v8
         with:
-          name: tofu-plan-review-x86_64-linux
+          name: terraform-plan-review-x86_64-linux
           skip-decompress: true
           path: dist/
 
@@ -137,7 +137,7 @@ jobs:
       - name: Download Binary
         uses: actions/download-artifact@v8
         with:
-          name: tofu-plan-review-x86_64-linux
+          name: terraform-plan-review-x86_64-linux
           skip-decompress: true
           path: dist/
 
@@ -192,7 +192,7 @@ jobs:
       - name: Download Binary
         uses: actions/download-artifact@v8
         with:
-          name: tofu-plan-review-x86_64-linux
+          name: terraform-plan-review-x86_64-linux
           skip-decompress: true
           path: dist/
 
@@ -233,7 +233,7 @@ jobs:
       contents: read
     timeout-minutes: 60
     env:
-      BIN_PATH: tofu-plan-review-${{ matrix.nix_system }}
+      BIN_PATH: terraform-plan-review-${{ matrix.nix_system }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -251,7 +251,7 @@ jobs:
         run: nix build . --system ${{ matrix.nix_system }}
 
       - name: Prepare Binary
-        run: install -m 0755 result/bin/tofu-plan-review "$BIN_PATH"
+        run: install -m 0755 result/bin/terraform-plan-review "$BIN_PATH"
 
       # The action downloads this binary onto runners without Nix, so it
       # must not reference the Nix store.
@@ -312,7 +312,7 @@ jobs:
       - name: Download Binaries
         uses: actions/download-artifact@v8
         with:
-          pattern: tofu-plan-review-*
+          pattern: terraform-plan-review-*
           merge-multiple: true
           skip-decompress: true
           path: release/
@@ -320,7 +320,7 @@ jobs:
       # For users who download the binaries directly.
       - name: Write Checksums
         working-directory: release
-        run: sha256sum tofu-plan-review-* > checksums.txt
+        run: sha256sum terraform-plan-review-* > checksums.txt
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v3
@@ -333,8 +333,8 @@ jobs:
       - name: Prepare Image Context
         run: |
           mkdir -p dist
-          install -m 0755 release/tofu-plan-review-x86_64-linux dist/tofu-plan-review-amd64
-          install -m 0755 release/tofu-plan-review-aarch64-linux dist/tofu-plan-review-arm64
+          install -m 0755 release/terraform-plan-review-x86_64-linux dist/terraform-plan-review-amd64
+          install -m 0755 release/terraform-plan-review-aarch64-linux dist/terraform-plan-review-arm64
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4

@@ -10,10 +10,10 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/plan"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
-	"github.com/tofu-contrib/tofu-plan-review/internal/source"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/source"
 )
 
 // inputFlags are shared by every command that reads plans.
@@ -103,16 +103,12 @@ func (a *analyzer) analyze(planPath string) (*report.Report, error) {
 func (a *analyzer) policy(repoRoot string) (*policy.Config, error) {
 	path := a.config
 	if path == "" {
-		found, legacy, err := policy.Find(repoRoot)
+		found, err := policy.Find(repoRoot)
 		if err != nil {
 			return nil, err
 		}
 		if found == "" {
 			return &policy.Config{}, nil
-		}
-		if legacy {
-			fmt.Fprintf(os.Stderr, "tofu-plan-review: %s is deprecated, move it to %s\n",
-				policy.LegacyFile, policy.DefaultFile)
 		}
 		path = found
 	}
@@ -178,7 +174,7 @@ func renderFlags() []cli.Flag {
 			Name:    "title",
 			Usage:   "comment title",
 			Sources: env("TITLE"),
-			Value:   "OpenTofu plan",
+			Value:   "Plan",
 		},
 	}
 }

@@ -1,5 +1,5 @@
 {
-  description = "tofu-plan-review - Readable OpenTofu plan reviews on pull requests";
+  description = "terraform-plan-review - Readable Terraform and OpenTofu plan reviews on pull requests";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -16,11 +16,11 @@
       in
       {
         packages.default = pkgs.buildGoModule {
-          pname = "tofu-plan-review";
+          pname = "terraform-plan-review";
           inherit version;
           src = pkgs.lib.cleanSource ./.;
-          subPackages = [ "cmd/tofu-plan-review" ];
-          vendorHash = "sha256-d0/mmonSbZNTr/RMVlGQ/MzQcpQiLcIie98Bc9aGpsU=";
+          subPackages = [ "cmd/terraform-plan-review" ];
+          vendorHash = "sha256-DkoCiB8Y4wZGhlN1R73Sqzk5wBxn9pXPendOzItFRgo=";
           env.CGO_ENABLED = 0;
           ldflags = [
             "-s"
@@ -28,14 +28,14 @@
             "-X main.version=${version}"
           ];
           meta = with pkgs.lib; {
-            description = "Readable OpenTofu plan reviews on pull requests";
+            description = "Readable Terraform and OpenTofu plan reviews on pull requests";
             license = licenses.mpl20;
-            mainProgram = "tofu-plan-review";
+            mainProgram = "terraform-plan-review";
           };
         };
 
         devShells.default = pkgs.mkShell {
-          name = "tofu-plan-review";
+          name = "terraform-plan-review";
           packages = [
             pkgs.go
             pkgs.opentofu

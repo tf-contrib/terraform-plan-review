@@ -14,7 +14,7 @@ import (
 // NewAction creates the entrypoint of the Docker action. The image has no
 // shell, so this command does what action.yml cannot: it splits the
 // newline-separated plan input and dispatches on the mode. All other
-// inputs arrive as TOFU_PLAN_REVIEW_* variables set in action.yml.
+// inputs arrive as TERRAFORM_PLAN_REVIEW_* variables set in action.yml.
 func NewAction() *cli.Command {
 	return &cli.Command{
 		Name:   "action",

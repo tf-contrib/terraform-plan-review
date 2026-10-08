@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/plan"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/source"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/source"
 )
 
 func load(t *testing.T, name, dir, rules string) *Report {

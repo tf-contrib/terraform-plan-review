@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/diff"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/diff"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
 )
 
 // CommentLimit is GitHub's maximum issue comment body length.
@@ -32,7 +32,7 @@ type Options struct {
 	Commit     string
 	// CommitURL links the commit in the footer. Empty shows the SHA only.
 	CommitURL string
-	// ToolVersion is the tofu-plan-review version shown in the footer.
+	// ToolVersion is the terraform-plan-review version shown in the footer.
 	ToolVersion string
 	Previous    *State
 	// Labels on the pull request; used for policy override labels.
@@ -46,7 +46,7 @@ func Marker(id string) string {
 	if id == "" {
 		id = "default"
 	}
-	return fmt.Sprintf("<!-- tofu-plan-review:id=%s -->", id)
+	return fmt.Sprintf("<!-- terraform-plan-review:id=%s -->", id)
 }
 
 // tier controls how much detail is rendered.
@@ -155,7 +155,7 @@ func (r *renderer) errored() bool {
 func (r *renderer) header(b *strings.Builder) {
 	title := r.opts.Title
 	if title == "" {
-		title = "OpenTofu plan"
+		title = "Plan"
 	}
 	total := r.totals()
 	icon := "🟢"
@@ -486,7 +486,7 @@ func (r *renderer) details(b *strings.Builder, rep *report.Report, t tier) {
 		writeFence(b, lines)
 	}
 	if len(rep.Drift) > 0 {
-		fmt.Fprintf(b, "<details><summary>⚠️ %s changed outside of OpenTofu</summary>\n\n", plural(len(rep.Drift), "resource"))
+		fmt.Fprintf(b, "<details><summary>⚠️ %s changed outside of Terraform/OpenTofu</summary>\n\n", plural(len(rep.Drift), "resource"))
 		b.WriteString("These differences were found while refreshing state. They are not caused by this change, but applying it will reconcile them.\n\n")
 		for _, c := range rep.Drift {
 			r.change(b, c, t, t <= tierTrimmed)
@@ -621,10 +621,10 @@ func (r *renderer) link(c report.Change) string {
 }
 
 // ProjectURL is linked from the footer of every comment.
-const ProjectURL = "https://github.com/tofu-contrib/tofu-plan-review"
+const ProjectURL = "https://github.com/tf-contrib/terraform-plan-review"
 
 func (r *renderer) footer(b *strings.Builder) {
-	tool := "[tofu-plan-review](" + ProjectURL + ")"
+	tool := "[terraform-plan-review](" + ProjectURL + ")"
 	if v := r.opts.ToolVersion; v != "" && v != "dev" {
 		if v[0] >= '0' && v[0] <= '9' {
 			v = "v" + v
@@ -636,12 +636,12 @@ func (r *renderer) footer(b *strings.Builder) {
 	// Roots may be planned with different versions; list each once.
 	var versions []string
 	for _, rep := range r.reports {
-		if v := rep.TofuVersion; v != "" && !slices.Contains(versions, v) {
+		if v := rep.TerraformVersion; v != "" && !slices.Contains(versions, v) {
 			versions = append(versions, v)
 		}
 	}
 	if len(versions) > 0 {
-		parts = append(parts, "OpenTofu "+strings.Join(versions, ", "))
+		parts = append(parts, "Terraform/OpenTofu "+strings.Join(versions, ", "))
 	}
 
 	if r.opts.Commit != "" {
@@ -653,7 +653,7 @@ func (r *renderer) footer(b *strings.Builder) {
 	}
 	fmt.Fprintf(b, "<sub>%s</sub>\n", strings.Join(parts, " · "))
 	if s := r.state.encode(); s != "" {
-		fmt.Fprintf(b, "<!-- tofu-plan-review:state:%s -->\n", s)
+		fmt.Fprintf(b, "<!-- terraform-plan-review:state:%s -->\n", s)
 	}
 }
 

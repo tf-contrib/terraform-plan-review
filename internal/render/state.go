@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
 )
 
 // State is embedded in the comment as a hidden HTML comment so the next run
@@ -52,7 +52,7 @@ func (s *State) encode() string {
 	return enc
 }
 
-var stateRe = regexp.MustCompile(`<!-- tofu-plan-review:state:([A-Za-z0-9+/=]+) -->`)
+var stateRe = regexp.MustCompile(`<!-- terraform-plan-review:state:([A-Za-z0-9+/=]+) -->`)
 
 // ParseState extracts the state from a previously posted comment body.
 func ParseState(body string) *State {

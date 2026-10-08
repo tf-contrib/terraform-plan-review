@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
 )
 
 // Location is a position in the repository. File is relative to the

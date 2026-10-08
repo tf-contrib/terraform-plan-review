@@ -1,6 +1,6 @@
-name: OpenTofu Plan Review
-description: Readable OpenTofu plan reviews on pull requests, with source annotations, change tracking between pushes and policy rules. Linux runners only.
-author: tofu-contrib
+name: Terraform Plan Review
+description: Readable Terraform and OpenTofu plan reviews on pull requests, with source annotations, change tracking between pushes and policy rules. Linux runners only.
+author: tf-contrib
 branding:
   icon: git-pull-request
   color: purple
@@ -24,16 +24,16 @@ inputs:
     default: ""
   report:
     description: Path of the report written in `analyze` mode, inside the workspace.
-    default: tofu-plan-review.json
+    default: terraform-plan-review.json
   config:
-    description: "Rules file (default: .github/tofu-plan-review.hcl)."
+    description: "Rules file (default: .github/terraform-plan-review.hcl)."
     default: ""
   id:
     description: Comment identifier. Use different ids for independent comments on the same pull request.
     default: default
   title:
     description: Comment title.
-    default: OpenTofu plan
+    default: Plan
   annotate:
     description: Annotate changed resources on their source lines in the pull request diff.
     default: "true"
@@ -67,18 +67,18 @@ runs:
   using: docker
   # A FROM scratch image holding the static binary. release-please updates
   # the tag on every release, so each ref runs the image it was released with.
-  image: docker://ghcr.io/tofu-contrib/tofu-plan-review:v0.2.1 # x-release-please-version
+  image: docker://ghcr.io/tf-contrib/terraform-plan-review:v0.2.1 # x-release-please-version
   args: [action]
   env:
-    TOFU_PLAN_REVIEW_MODE: ${{ inputs.mode }}
-    TOFU_PLAN_REVIEW_PLAN: ${{ inputs.plan }}
-    TOFU_PLAN_REVIEW_DIR: ${{ inputs.working-directory }}
-    TOFU_PLAN_REVIEW_NAME: ${{ inputs.name }}
-    TOFU_PLAN_REVIEW_OUT: ${{ inputs.report }}
-    TOFU_PLAN_REVIEW_CONFIG: ${{ inputs.config }}
-    TOFU_PLAN_REVIEW_ID: ${{ inputs.id }}
-    TOFU_PLAN_REVIEW_TITLE: ${{ inputs.title }}
-    TOFU_PLAN_REVIEW_ANNOTATE: ${{ inputs.annotate }}
-    TOFU_PLAN_REVIEW_SUMMARY: ${{ inputs.summary }}
-    TOFU_PLAN_REVIEW_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
+    TERRAFORM_PLAN_REVIEW_MODE: ${{ inputs.mode }}
+    TERRAFORM_PLAN_REVIEW_PLAN: ${{ inputs.plan }}
+    TERRAFORM_PLAN_REVIEW_DIR: ${{ inputs.working-directory }}
+    TERRAFORM_PLAN_REVIEW_NAME: ${{ inputs.name }}
+    TERRAFORM_PLAN_REVIEW_OUT: ${{ inputs.report }}
+    TERRAFORM_PLAN_REVIEW_CONFIG: ${{ inputs.config }}
+    TERRAFORM_PLAN_REVIEW_ID: ${{ inputs.id }}
+    TERRAFORM_PLAN_REVIEW_TITLE: ${{ inputs.title }}
+    TERRAFORM_PLAN_REVIEW_ANNOTATE: ${{ inputs.annotate }}
+    TERRAFORM_PLAN_REVIEW_SUMMARY: ${{ inputs.summary }}
+    TERRAFORM_PLAN_REVIEW_FAIL_ON_BLOCK: ${{ inputs.fail-on-block }}
     GITHUB_TOKEN: ${{ inputs.github-token }}
