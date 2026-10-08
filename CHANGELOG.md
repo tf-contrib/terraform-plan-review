@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/tf-contrib/terraform-plan-review/compare/v0.2.1...v0.3.0) (2026-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* everything named tofu-plan-review is now named terraform-plan-review: the action (tofu-contrib/terraform-plan-review), the binary and Go module path, the image (ghcr.io/tofu-contrib/terraform-plan-review), the rules file (.github/terraform-plan-review.hcl), the default report file, the TERRAFORM_PLAN_REVIEW_* environment variables and the comment markers. Move .github/tofu-plan-review.hcl to the new path. On pull requests that already have a review comment, the next run posts a new one.
+
+### Features
+
+* rename to terraform-plan-review ([#14](https://github.com/tf-contrib/terraform-plan-review/issues/14)) ([d8570ad](https://github.com/tf-contrib/terraform-plan-review/commit/d8570ad018e88d75b7bebf169fd5082c9f53b42c))
+
 ## [0.2.1](https://github.com/tofu-contrib/tofu-plan-review/compare/v0.2.0...v0.2.1) (2026-10-06)
 
 
