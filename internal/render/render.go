@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/diff"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
+	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
+	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
+	"github.com/tofu-contrib/terraform-plan-review/internal/report"
 )
 
 // CommentLimit is GitHub's maximum issue comment body length.
@@ -32,7 +32,7 @@ type Options struct {
 	Commit     string
 	// CommitURL links the commit in the footer. Empty shows the SHA only.
 	CommitURL string
-	// ToolVersion is the tofu-plan-review version shown in the footer.
+	// ToolVersion is the terraform-plan-review version shown in the footer.
 	ToolVersion string
 	Previous    *State
 	// Labels on the pull request; used for policy override labels.
@@ -46,7 +46,7 @@ func Marker(id string) string {
 	if id == "" {
 		id = "default"
 	}
-	return fmt.Sprintf("<!-- tofu-plan-review:id=%s -->", id)
+	return fmt.Sprintf("<!-- terraform-plan-review:id=%s -->", id)
 }
 
 // tier controls how much detail is rendered.
@@ -621,10 +621,10 @@ func (r *renderer) link(c report.Change) string {
 }
 
 // ProjectURL is linked from the footer of every comment.
-const ProjectURL = "https://github.com/tofu-contrib/tofu-plan-review"
+const ProjectURL = "https://github.com/tofu-contrib/terraform-plan-review"
 
 func (r *renderer) footer(b *strings.Builder) {
-	tool := "[tofu-plan-review](" + ProjectURL + ")"
+	tool := "[terraform-plan-review](" + ProjectURL + ")"
 	if v := r.opts.ToolVersion; v != "" && v != "dev" {
 		if v[0] >= '0' && v[0] <= '9' {
 			v = "v" + v
@@ -653,7 +653,7 @@ func (r *renderer) footer(b *strings.Builder) {
 	}
 	fmt.Fprintf(b, "<sub>%s</sub>\n", strings.Join(parts, " · "))
 	if s := r.state.encode(); s != "" {
-		fmt.Fprintf(b, "<!-- tofu-plan-review:state:%s -->\n", s)
+		fmt.Fprintf(b, "<!-- terraform-plan-review:state:%s -->\n", s)
 	}
 }
 

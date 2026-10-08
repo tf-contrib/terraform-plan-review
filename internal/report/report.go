@@ -14,10 +14,10 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/diff"
-	"github.com/tofu-contrib/tofu-plan-review/internal/plan"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/source"
+	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
+	"github.com/tofu-contrib/terraform-plan-review/internal/plan"
+	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
+	"github.com/tofu-contrib/terraform-plan-review/internal/source"
 )
 
 // Schema identifies the report file format.
@@ -45,7 +45,7 @@ func (a Action) rank() int { return slices.Index(Order, a) }
 func (a Action) Destructive() bool { return a == Delete || a == Replace }
 
 type Report struct {
-	Schema      int    `json:"tofu_plan_review"`
+	Schema      int    `json:"terraform_plan_review"`
 	Name        string `json:"name,omitempty"`
 	Dir         string `json:"dir,omitempty"`
 	TofuVersion string `json:"tofu_version,omitempty"`
@@ -365,7 +365,7 @@ func (r *Report) Encode(w io.Writer) error {
 // IsReport reports whether data is a report file rather than a plan.
 func IsReport(data []byte) bool {
 	var probe struct {
-		Schema int `json:"tofu_plan_review"`
+		Schema int `json:"terraform_plan_review"`
 	}
 	return json.Unmarshal(data, &probe) == nil && probe.Schema > 0
 }

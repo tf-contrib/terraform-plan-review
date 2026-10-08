@@ -10,10 +10,10 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/plan"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
-	"github.com/tofu-contrib/tofu-plan-review/internal/source"
+	"github.com/tofu-contrib/terraform-plan-review/internal/plan"
+	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
+	"github.com/tofu-contrib/terraform-plan-review/internal/report"
+	"github.com/tofu-contrib/terraform-plan-review/internal/source"
 )
 
 // inputFlags are shared by every command that reads plans.
@@ -111,7 +111,7 @@ func (a *analyzer) policy(repoRoot string) (*policy.Config, error) {
 			return &policy.Config{}, nil
 		}
 		if legacy {
-			fmt.Fprintf(os.Stderr, "tofu-plan-review: %s is deprecated, move it to %s\n",
+			fmt.Fprintf(os.Stderr, "terraform-plan-review: %s is deprecated, move it to %s\n",
 				policy.LegacyFile, policy.DefaultFile)
 		}
 		path = found

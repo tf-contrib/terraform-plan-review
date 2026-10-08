@@ -10,9 +10,9 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/github"
-	"github.com/tofu-contrib/tofu-plan-review/internal/render"
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
+	"github.com/tofu-contrib/terraform-plan-review/internal/github"
+	"github.com/tofu-contrib/terraform-plan-review/internal/render"
+	"github.com/tofu-contrib/terraform-plan-review/internal/report"
 )
 
 // NewAnalyze creates the command that writes a redacted report for one root.
@@ -197,7 +197,7 @@ func runComment(cmd *cli.Command, paths []string) error {
 	case cmd.Bool("dry-run"):
 		fmt.Fprintln(stdout, body)
 	case !post:
-		fmt.Fprintln(os.Stderr, "tofu-plan-review: not a pull request event and no --pr given; skipping the comment")
+		fmt.Fprintln(os.Stderr, "terraform-plan-review: not a pull request event and no --pr given; skipping the comment")
 	case existing != nil:
 		if err := client.UpdateComment(existing.ID, body); err != nil {
 			return err

@@ -15,7 +15,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
+	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
 )
 
 const (
@@ -120,7 +120,7 @@ func run(t *testing.T, args ...string) (string, error) {
 	var stdout bytes.Buffer
 	app := NewApp()
 	app.Writer = &stdout
-	err := app.Run(context.Background(), append([]string{"tofu-plan-review"}, args...))
+	err := app.Run(context.Background(), append([]string{"terraform-plan-review"}, args...))
 	return stdout.String(), err
 }
 
@@ -138,9 +138,9 @@ func TestCommentCreatesThenUpdates(t *testing.T) {
 	}
 	first := gh.comments[0].Body
 	for _, want := range []string{
-		"<!-- tofu-plan-review:id=default -->",
+		"<!-- terraform-plan-review:id=default -->",
 		"https://github.com/o/r/blob/0123456789abcdef/testdata/scenarios/basic/v2/main.tf#L7",
-		"tofu-plan-review:state:",
+		"terraform-plan-review:state:",
 	} {
 		if !strings.Contains(first, want) {
 			t.Errorf("comment missing %q", want)
@@ -261,18 +261,18 @@ func TestNoInputs(t *testing.T) {
 }
 
 func TestEnvironmentVariables(t *testing.T) {
-	t.Setenv("TOFU_PLAN_REVIEW_DIR", basicDir)
-	t.Setenv("TOFU_PLAN_REVIEW_REPO_ROOT", "../..")
-	t.Setenv("TOFU_PLAN_REVIEW_TITLE", "From env")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_DIR", basicDir)
+	t.Setenv("TERRAFORM_PLAN_REVIEW_REPO_ROOT", "../..")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_TITLE", "From env")
 	out, err := run(t, "render", "--", basicPlan)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "### 🔴 From env:") {
-		t.Errorf("title from TOFU_PLAN_REVIEW_TITLE not applied:\n%s", out[:min(len(out), 300)])
+		t.Errorf("title from TERRAFORM_PLAN_REVIEW_TITLE not applied:\n%s", out[:min(len(out), 300)])
 	}
 	if !strings.Contains(out, "testdata/scenarios/basic/v2/main.tf") && !strings.Contains(out, "terraform_data.server") {
-		t.Error("dir from TOFU_PLAN_REVIEW_DIR not applied")
+		t.Error("dir from TERRAFORM_PLAN_REVIEW_DIR not applied")
 	}
 }
 
@@ -325,12 +325,12 @@ func TestMissingConfig(t *testing.T) {
 func TestActionAnalyzeFromEnvironment(t *testing.T) {
 	out := filepath.Join(t.TempDir(), "report.json")
 	t.Setenv("GITHUB_WORKSPACE", "")
-	t.Setenv("TOFU_PLAN_REVIEW_MODE", "analyze")
-	t.Setenv("TOFU_PLAN_REVIEW_PLAN", "\n  "+basicPlan+"  \n\n")
-	t.Setenv("TOFU_PLAN_REVIEW_DIR", basicDir)
-	t.Setenv("TOFU_PLAN_REVIEW_REPO_ROOT", "../..")
-	t.Setenv("TOFU_PLAN_REVIEW_NAME", "basic")
-	t.Setenv("TOFU_PLAN_REVIEW_OUT", out)
+	t.Setenv("TERRAFORM_PLAN_REVIEW_MODE", "analyze")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_PLAN", "\n  "+basicPlan+"  \n\n")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_DIR", basicDir)
+	t.Setenv("TERRAFORM_PLAN_REVIEW_REPO_ROOT", "../..")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_NAME", "basic")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_OUT", out)
 	if _, err := run(t, "action"); err != nil {
 		t.Fatal(err)
 	}
@@ -344,9 +344,9 @@ func TestActionCommentFromEnvironment(t *testing.T) {
 	gh := newFakeGitHub(t)
 	actionsEnv(t, gh.server.URL)
 	t.Setenv("GITHUB_WORKSPACE", "")
-	t.Setenv("TOFU_PLAN_REVIEW_REPO_ROOT", "../..")
-	t.Setenv("TOFU_PLAN_REVIEW_CONFIG", rules)
-	t.Setenv("TOFU_PLAN_REVIEW_FAIL_ON_BLOCK", "false")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_REPO_ROOT", "../..")
+	t.Setenv("TERRAFORM_PLAN_REVIEW_CONFIG", rules)
+	t.Setenv("TERRAFORM_PLAN_REVIEW_FAIL_ON_BLOCK", "false")
 	// Combine per-root reports, like the matrix setup does.
 	dir := t.TempDir()
 	var reports []string
@@ -360,7 +360,7 @@ func TestActionCommentFromEnvironment(t *testing.T) {
 		}
 		reports = append(reports, p)
 	}
-	t.Setenv("TOFU_PLAN_REVIEW_PLAN", strings.Join(reports, "\n"))
+	t.Setenv("TERRAFORM_PLAN_REVIEW_PLAN", strings.Join(reports, "\n"))
 	if _, err := run(t, "action"); err != nil {
 		t.Fatal(err)
 	}
@@ -376,8 +376,8 @@ func TestActionRejectsBadInput(t *testing.T) {
 		{"deploy", "plan.json", `mode must be comment or analyze, got "deploy"`},
 		{"comment", "/home/runner/work/_temp/plan.json", "outside the workspace"},
 	} {
-		t.Setenv("TOFU_PLAN_REVIEW_MODE", tc.mode)
-		t.Setenv("TOFU_PLAN_REVIEW_PLAN", tc.plan)
+		t.Setenv("TERRAFORM_PLAN_REVIEW_MODE", tc.mode)
+		t.Setenv("TERRAFORM_PLAN_REVIEW_PLAN", tc.plan)
 		if _, err := run(t, "action"); err == nil || !strings.Contains(err.Error(), tc.want) {
 			t.Errorf("mode=%q plan=%q: err = %v, want %q", tc.mode, tc.plan, err, tc.want)
 		}

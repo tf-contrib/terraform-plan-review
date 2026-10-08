@@ -1,16 +1,17 @@
-# tofu-plan-review
+# terraform-plan-review
 
-[![CI](https://github.com/tofu-contrib/tofu-plan-review/actions/workflows/ci.yml/badge.svg)](https://github.com/tofu-contrib/tofu-plan-review/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/tofu-contrib/tofu-plan-review?include_prereleases)](https://github.com/tofu-contrib/tofu-plan-review/releases)
+[![CI](https://github.com/tofu-contrib/terraform-plan-review/actions/workflows/ci.yml/badge.svg)](https://github.com/tofu-contrib/terraform-plan-review/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tofu-contrib/terraform-plan-review?include_prereleases)](https://github.com/tofu-contrib/terraform-plan-review/releases)
 [![License](https://img.shields.io/badge/License-MPL--2.0-brightgreen.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![OpenTofu](https://img.shields.io/badge/OpenTofu-compatible-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
 
-Readable [OpenTofu](https://opentofu.org) plan reviews on pull requests.
+Readable [Terraform](https://developer.hashicorp.com/terraform) and
+[OpenTofu](https://opentofu.org) plan reviews on pull requests.
 
-Most plan commenters paste the text output of `tofu plan` into a comment.
-`tofu-plan-review` reads the structured JSON plan instead, which lets it show
-reviewers what matters:
+Most plan commenters paste the text output of `terraform plan` into a
+comment. `terraform-plan-review` reads the structured JSON plan instead, which
+lets it show reviewers what matters:
 
 - **Destructive changes first.** Destroys and replacements are listed at the
   top, with the attribute that forces each replacement.
@@ -32,8 +33,9 @@ reviewers what matters:
   sensitivity marks, *and* any copy of a sensitive value that appears in an
   unmarked attribute is redacted too.
 
-Terraform JSON plans use the same format and should work too, but are not
-tested yet. The action runs on Linux runners (x86-64 and ARM64).
+Terraform and OpenTofu share the JSON plan format. The test suite runs on
+OpenTofu plans; Terraform plans are not tested yet. The action runs on Linux
+runners (x86-64 and ARM64).
 
 ## Quick start
 
@@ -57,7 +59,7 @@ jobs:
           tofu plan -input=false -out=tfplan
           tofu show -json tfplan > tfplan.json
         working-directory: infra
-      - uses: tofu-contrib/tofu-plan-review@main
+      - uses: tofu-contrib/terraform-plan-review@main
         with:
           plan: infra/tfplan.json
           working-directory: infra
@@ -90,7 +92,7 @@ jobs:
           tofu plan -input=false -out=tfplan
           tofu show -json tfplan > tfplan.json
         working-directory: infra/${{ matrix.root }}
-      - uses: tofu-contrib/tofu-plan-review@main
+      - uses: tofu-contrib/terraform-plan-review@main
         with:
           mode: analyze
           plan: infra/${{ matrix.root }}/tfplan.json
@@ -114,7 +116,7 @@ jobs:
           pattern: report-*
           merge-multiple: true
           path: reports
-      - uses: tofu-contrib/tofu-plan-review@main
+      - uses: tofu-contrib/terraform-plan-review@main
         with:
           plan: |
             reports/report-network.json
@@ -124,7 +126,7 @@ jobs:
 
 ## Rules
 
-Put rules in `.github/tofu-plan-review.hcl`:
+Put rules in `.github/terraform-plan-review.hcl`:
 
 ```hcl
 # Adding this label to the pull request downgrades blocks to warnings.
@@ -170,20 +172,20 @@ without a new push.
 
 ## Inputs
 
-| Input               | Default                | Description                                                              |
-| ------------------- | ---------------------- | ------------------------------------------------------------------------ |
-| `plan`              | (required)             | Plan files or reports, one per line                                      |
-| `mode`              | `comment`              | `comment`, or `analyze` to write a report for combining roots            |
-| `working-directory` | `.`                    | Root module directory                                                    |
-| `name`              | `working-directory`    | Display name of the root                                                 |
-| `report`            | `tofu-plan-review.json`| Report path in `analyze` mode                                            |
-| `config`            | `.github/tofu-plan-review.hcl` | Rules file; a missing path is an error, a missing default means no rules |
-| `id`                | `default`              | Comment identifier, for independent comments on one pull request         |
-| `title`             | `OpenTofu plan`        | Comment title                                                            |
-| `annotate`          | `true`                 | Annotate source lines in the pull request diff                           |
-| `summary`           | `true`                 | Write the full review to the job summary                                 |
-| `fail-on-block`     | `true`                 | Fail the step when a blocking rule matches                               |
-| `github-token`      | `github.token`         | Token with `pull-requests: write`                                        |
+| Input               | Default                             | Description                                                              |
+| ------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| `plan`              | (required)                          | Plan files or reports, one per line                                      |
+| `mode`              | `comment`                           | `comment`, or `analyze` to write a report for combining roots            |
+| `working-directory` | `.`                                 | Root module directory                                                    |
+| `name`              | `working-directory`                 | Display name of the root                                                 |
+| `report`            | `terraform-plan-review.json`        | Report path in `analyze` mode                                            |
+| `config`            | `.github/terraform-plan-review.hcl` | Rules file; a missing path is an error, a missing default means no rules |
+| `id`                | `default`                           | Comment identifier, for independent comments on one pull request         |
+| `title`             | `OpenTofu plan`                     | Comment title                                                            |
+| `annotate`          | `true`                              | Annotate source lines in the pull request diff                           |
+| `summary`           | `true`                              | Write the full review to the job summary                                 |
+| `fail-on-block`     | `true`                              | Fail the step when a blocking rule matches                               |
+| `github-token`      | `github.token`                      | Token with `pull-requests: write`                                        |
 
 Outputs: `has-changes`, `destructive`, `blocked`, `to-add`, `to-change`,
 `to-replace`, `to-destroy`.
@@ -191,22 +193,23 @@ Outputs: `has-changes`, `destructive`, `blocked`, `to-add`, `to-change`,
 ## Local use
 
 ```sh
-go install github.com/tofu-contrib/tofu-plan-review/cmd/tofu-plan-review@latest
+go install github.com/tofu-contrib/terraform-plan-review/cmd/terraform-plan-review@latest
 
 tofu plan -out=tfplan
-tofu-plan-review render tfplan > review.md
+terraform-plan-review render tfplan > review.md
 
 # or with the image
 tofu show -json tfplan > tfplan.json
-docker run --rm -v "$PWD:/work" -w /work ghcr.io/tofu-contrib/tofu-plan-review render tfplan.json
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/tofu-contrib/terraform-plan-review render tfplan.json
 ```
 
 The CLI accepts binary plan files too, converting them with `tofu show -json`
-when `tofu` is on the `PATH`.
+when `tofu` is on the `PATH`. Pass `--tofu terraform` to convert them with
+Terraform instead.
 
-Run `tofu-plan-review <command> --help` for all options. Every option can also
-be set with a `TOFU_PLAN_REVIEW_<OPTION>` environment variable, e.g.
-`TOFU_PLAN_REVIEW_CONFIG` for `--config`.
+Run `terraform-plan-review <command> --help` for all options. Every option can
+also be set with a `TERRAFORM_PLAN_REVIEW_<OPTION>` environment variable, e.g.
+`TERRAFORM_PLAN_REVIEW_CONFIG` for `--config`.
 
 ## Notes and limitations
 
@@ -221,9 +224,9 @@ be set with a `TOFU_PLAN_REVIEW_<OPTION>` environment variable, e.g.
   to avoid redacting unrelated text.
 - Linux runners only: the action is a Docker container action using a
   `FROM scratch` image (about 10 MB) with the static binary, published to
-  `ghcr.io/tofu-contrib/tofu-plan-review` for amd64 and arm64. Each release
-  of the action pins its own image version, and `@main` uses the latest
-  release.
+  `ghcr.io/tofu-contrib/terraform-plan-review` for amd64 and arm64. Each
+  release of the action pins its own image version, and `@main` uses the
+  latest release.
 
 ## Development
 

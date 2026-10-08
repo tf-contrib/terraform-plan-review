@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/devcontainers/spec/refs/heads/main/schemas/devContainer.base.schema.json",
-  "name": "tofu-plan-review",
+  "name": "terraform-plan-review",
   "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "workspaceFolder": "/home/vscode/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/home/vscode/workspace,type=bind",

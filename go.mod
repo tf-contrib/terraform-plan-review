@@ -1,4 +1,4 @@
-module github.com/tofu-contrib/tofu-plan-review
+module github.com/tofu-contrib/terraform-plan-review
 
 go 1.26.7
 

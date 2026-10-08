@@ -1,4 +1,4 @@
-/tofu-plan-review
+/terraform-plan-review
 /dist/
 *.tfstate
 *.tfstate.backup

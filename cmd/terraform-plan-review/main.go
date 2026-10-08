@@ -1,4 +1,4 @@
-// Command tofu-plan-review renders OpenTofu plans for pull request review.
+// Command terraform-plan-review renders OpenTofu plans for pull request review.
 package main
 
 import (
@@ -26,10 +26,10 @@ func main() {
 	var blocked errBlocked
 	switch {
 	case errors.As(err, &blocked):
-		fmt.Fprintln(os.Stderr, "tofu-plan-review:", err)
+		fmt.Fprintln(os.Stderr, "terraform-plan-review:", err)
 		os.Exit(exitBlocked)
 	case err != nil:
-		fmt.Fprintln(os.Stderr, "tofu-plan-review:", err)
+		fmt.Fprintln(os.Stderr, "terraform-plan-review:", err)
 		os.Exit(1)
 	}
 }
@@ -37,16 +37,16 @@ func main() {
 // NewApp creates the root command.
 func NewApp() *cli.Command {
 	return &cli.Command{
-		Name:      "tofu-plan-review",
-		Usage:     "Readable OpenTofu plan reviews on pull requests",
-		UsageText: "tofu-plan-review [global options] command [options] INPUT...",
+		Name:      "terraform-plan-review",
+		Usage:     "Readable Terraform and OpenTofu plan reviews on pull requests",
+		UsageText: "terraform-plan-review [global options] command [options] INPUT...",
 		Description: `INPUT is a binary plan file (converted with "tofu show -json"), the JSON
 output of "tofu show -json", or a report written by "analyze". To review
 several roots together, run "analyze" once per root and pass all reports
 to "comment".
 
-Every option can also be set with the TOFU_PLAN_REVIEW_<OPTION> environment
-variable, e.g. TOFU_PLAN_REVIEW_DIR for --dir.`,
+Every option can also be set with the TERRAFORM_PLAN_REVIEW_<OPTION> environment
+variable, e.g. TERRAFORM_PLAN_REVIEW_DIR for --dir.`,
 		Version:         buildVersion(),
 		HideHelpCommand: true,
 		ErrWriter:       os.Stderr,
@@ -77,5 +77,5 @@ func (e errBlocked) Error() string {
 
 // env returns the environment variable source for an option.
 func env(name string) cli.ValueSourceChain {
-	return cli.EnvVars("TOFU_PLAN_REVIEW_" + name)
+	return cli.EnvVars("TERRAFORM_PLAN_REVIEW_" + name)
 }

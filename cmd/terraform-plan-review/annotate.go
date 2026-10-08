@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tofu-contrib/tofu-plan-review/internal/diff"
-	"github.com/tofu-contrib/tofu-plan-review/internal/github"
-	"github.com/tofu-contrib/tofu-plan-review/internal/policy"
-	"github.com/tofu-contrib/tofu-plan-review/internal/report"
+	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
+	"github.com/tofu-contrib/terraform-plan-review/internal/github"
+	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
+	"github.com/tofu-contrib/terraform-plan-review/internal/report"
 )
 
 // GitHub shows at most 10 annotations of each level per step; anything
@@ -47,7 +47,7 @@ func annotations(reports []*report.Report, labels []string) []github.Annotation 
 	for _, level := range []string{"error", "warning", "notice"} {
 		as := byLevel[level]
 		if len(as) > maxAnnotationsPerLevel {
-			fmt.Fprintf(os.Stderr, "tofu-plan-review: %d %s annotations not shown (GitHub limit is %d per step)\n",
+			fmt.Fprintf(os.Stderr, "terraform-plan-review: %d %s annotations not shown (GitHub limit is %d per step)\n",
 				len(as)-maxAnnotationsPerLevel, level, maxAnnotationsPerLevel)
 			as = as[:maxAnnotationsPerLevel]
 		}

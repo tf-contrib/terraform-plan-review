@@ -1,4 +1,4 @@
-<!-- tofu-plan-review:id=default -->
+<!-- terraform-plan-review:id=default -->
 ### ⛔ OpenTofu plan: **1 to replace**, 1 to change, 1 to import
 
 > [!WARNING]
@@ -63,5 +63,5 @@ _1 change hidden by ignore rules._
 
 </details>
 
-<sub>[tofu-plan-review](https://github.com/tofu-contrib/tofu-plan-review) · OpenTofu 1.13.1 · plan for `0123456`</sub>
-<!-- tofu-plan-review:state:H4sIAAAAAAAA/zTNS2rEMBCE4bvU2oix1H6MLiNa3e0g4kcYyQlh8N1DhmRXi4/6n/hE7DsIIm69DzSM03znLGoLOjwQn1BunLna7+avmjSnstfGu5jbuOyImEk0z0TL3Y/oXqrwlh7Hak4KIsLN94PSFMz8H6gh5VPerbn1eKuIsLwo0WiL1x7dK+v+nz6Otch30kPOzfbmuNZzM0TIpDJMM3m2gOu6fgIAAP//qUa+2NEAAAA= -->
+<sub>[terraform-plan-review](https://github.com/tofu-contrib/terraform-plan-review) · OpenTofu 1.13.1 · plan for `0123456`</sub>
+<!-- terraform-plan-review:state:H4sIAAAAAAAA/zTNS2rEMBCE4bvU2oix1H6MLiNa3e0g4kcYyQlh8N1DhmRXi4/6n/hE7DsIIm69DzSM03znLGoLOjwQn1BunLna7+avmjSnstfGu5jbuOyImEk0z0TL3Y/oXqrwlh7Hak4KIsLN94PSFMz8H6gh5VPerbn1eKuIsLwo0WiL1x7dK+v+nz6Otch30kPOzfbmuNZzM0TIpDJMM3m2gOu6fgIAAP//qUa+2NEAAAA= -->
