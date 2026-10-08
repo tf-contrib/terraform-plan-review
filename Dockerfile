@@ -8,7 +8,7 @@
 # directory, so there is no USER or WORKDIR.
 FROM scratch
 
-LABEL org.opencontainers.image.source="https://github.com/tofu-contrib/terraform-plan-review" \
+LABEL org.opencontainers.image.source="https://github.com/tf-contrib/terraform-plan-review" \
       org.opencontainers.image.description="Readable Terraform and OpenTofu plan reviews on pull requests" \
       org.opencontainers.image.licenses="MPL-2.0"
 

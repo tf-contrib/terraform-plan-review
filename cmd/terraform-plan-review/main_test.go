@@ -15,7 +15,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
 )
 
 const (

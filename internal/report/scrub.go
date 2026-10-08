@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
-	"github.com/tofu-contrib/terraform-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/diff"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
 )
 
 // minSecretLen is the shortest sensitive value scrubbed by content. Shorter

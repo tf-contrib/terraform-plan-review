@@ -147,5 +147,5 @@ _1 change hidden by ignore rules._
 
 </details>
 
-<sub>[terraform-plan-review](https://github.com/tofu-contrib/terraform-plan-review) · Terraform/OpenTofu 1.13.1 · plan for `0123456`</sub>
+<sub>[terraform-plan-review](https://github.com/tf-contrib/terraform-plan-review) · Terraform/OpenTofu 1.13.1 · plan for `0123456`</sub>
 <!-- terraform-plan-review:state:H4sIAAAAAAAA/2zRXWrlMAwF4L3o+RIS2/HfZoIsySVMEl/s3JZSsvfB05mXSd8M/jhCR1/wDnF6AEGEcVLazNb5gIlYMjygQvyChG2l/tgLvzYZ8PkcTqkVc6n7wnjiwPLcyucuxwkRdPZ+zpayVxYe8B/Npb6V85QDImAiZaY0iqN8l9vaehwnLS6Z2RqkOzrkAyIoRaNDZdOY57spG/dhknEcQ0hj4rt5lm2lT4jgtLHBeXYe9Z1VOXAXXs7SE3HM3oVgUeGdNqEqfQFj1IRBGWYVfmL1XWrfUyeVpmDZZYHrAf03YZPePH60hdOyHu3Eg2TYce39eUOcvDE5/Gm6qxX3pZZNBlr7KUY1zWycFlF/QdNLetEvOYetvDWIICmzMVay4gm+xw7/kr5bWbjQqx93wNZeu0AEckyz80ahaLiu63cAAAD//0RCYXJIAgAA -->

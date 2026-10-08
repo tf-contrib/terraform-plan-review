@@ -10,9 +10,9 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/github"
-	"github.com/tofu-contrib/terraform-plan-review/internal/render"
-	"github.com/tofu-contrib/terraform-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/github"
+	"github.com/tf-contrib/terraform-plan-review/internal/render"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
 )
 
 // NewAnalyze creates the command that writes a redacted report for one root.

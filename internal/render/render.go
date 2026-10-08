@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
-	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
-	"github.com/tofu-contrib/terraform-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/diff"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
 )
 
 // CommentLimit is GitHub's maximum issue comment body length.
@@ -621,7 +621,7 @@ func (r *renderer) link(c report.Change) string {
 }
 
 // ProjectURL is linked from the footer of every comment.
-const ProjectURL = "https://github.com/tofu-contrib/terraform-plan-review"
+const ProjectURL = "https://github.com/tf-contrib/terraform-plan-review"
 
 func (r *renderer) footer(b *strings.Builder) {
 	tool := "[terraform-plan-review](" + ProjectURL + ")"

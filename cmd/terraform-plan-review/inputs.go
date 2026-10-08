@@ -10,10 +10,10 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/plan"
-	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
-	"github.com/tofu-contrib/terraform-plan-review/internal/report"
-	"github.com/tofu-contrib/terraform-plan-review/internal/source"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/source"
 )
 
 // inputFlags are shared by every command that reads plans.

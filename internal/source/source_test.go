@@ -3,7 +3,7 @@ package source
 import (
 	"testing"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
 )
 
 func TestStripKeys(t *testing.T) {

@@ -1,7 +1,7 @@
 # terraform-plan-review
 
-[![CI](https://github.com/tofu-contrib/terraform-plan-review/actions/workflows/ci.yml/badge.svg)](https://github.com/tofu-contrib/terraform-plan-review/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/tofu-contrib/terraform-plan-review?include_prereleases)](https://github.com/tofu-contrib/terraform-plan-review/releases)
+[![CI](https://github.com/tf-contrib/terraform-plan-review/actions/workflows/ci.yml/badge.svg)](https://github.com/tf-contrib/terraform-plan-review/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tf-contrib/terraform-plan-review?include_prereleases)](https://github.com/tf-contrib/terraform-plan-review/releases)
 [![License](https://img.shields.io/badge/License-MPL--2.0-brightgreen.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![OpenTofu](https://img.shields.io/badge/OpenTofu-compatible-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
@@ -59,7 +59,7 @@ jobs:
           tofu plan -input=false -out=tfplan
           tofu show -json tfplan > tfplan.json
         working-directory: infra
-      - uses: tofu-contrib/terraform-plan-review@main
+      - uses: tf-contrib/terraform-plan-review@main
         with:
           plan: infra/tfplan.json
           working-directory: infra
@@ -92,7 +92,7 @@ jobs:
           tofu plan -input=false -out=tfplan
           tofu show -json tfplan > tfplan.json
         working-directory: infra/${{ matrix.root }}
-      - uses: tofu-contrib/terraform-plan-review@main
+      - uses: tf-contrib/terraform-plan-review@main
         with:
           mode: analyze
           plan: infra/${{ matrix.root }}/tfplan.json
@@ -116,7 +116,7 @@ jobs:
           pattern: report-*
           merge-multiple: true
           path: reports
-      - uses: tofu-contrib/terraform-plan-review@main
+      - uses: tf-contrib/terraform-plan-review@main
         with:
           plan: |
             reports/report-network.json
@@ -193,14 +193,14 @@ Outputs: `has-changes`, `destructive`, `blocked`, `to-add`, `to-change`,
 ## Local use
 
 ```sh
-go install github.com/tofu-contrib/terraform-plan-review/cmd/terraform-plan-review@latest
+go install github.com/tf-contrib/terraform-plan-review/cmd/terraform-plan-review@latest
 
 tofu plan -out=tfplan
 terraform-plan-review render tfplan > review.md
 
 # or with the image
 tofu show -json tfplan > tfplan.json
-docker run --rm -v "$PWD:/work" -w /work ghcr.io/tofu-contrib/terraform-plan-review render tfplan.json
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/tf-contrib/terraform-plan-review render tfplan.json
 ```
 
 The CLI accepts binary plan files too, converting them with `tofu show -json`
@@ -224,7 +224,7 @@ also be set with a `TERRAFORM_PLAN_REVIEW_<OPTION>` environment variable, e.g.
   to avoid redacting unrelated text.
 - Linux runners only: the action is a Docker container action using a
   `FROM scratch` image (about 10 MB) with the static binary, published to
-  `ghcr.io/tofu-contrib/terraform-plan-review` for amd64 and arm64. Each
+  `ghcr.io/tf-contrib/terraform-plan-review` for amd64 and arm64. Each
   release of the action pins its own image version, and `@main` uses the
   latest release.
 

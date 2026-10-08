@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
 )
 
 // State is embedded in the comment as a hidden HTML comment so the next run

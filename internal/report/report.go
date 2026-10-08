@@ -14,10 +14,10 @@ import (
 	"slices"
 	"sort"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
-	"github.com/tofu-contrib/terraform-plan-review/internal/plan"
-	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
-	"github.com/tofu-contrib/terraform-plan-review/internal/source"
+	"github.com/tf-contrib/terraform-plan-review/internal/diff"
+	"github.com/tf-contrib/terraform-plan-review/internal/plan"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/source"
 )
 
 // Schema identifies the report file format.

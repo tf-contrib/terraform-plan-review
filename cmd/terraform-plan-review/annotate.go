@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/tofu-contrib/terraform-plan-review/internal/diff"
-	"github.com/tofu-contrib/terraform-plan-review/internal/github"
-	"github.com/tofu-contrib/terraform-plan-review/internal/policy"
-	"github.com/tofu-contrib/terraform-plan-review/internal/report"
+	"github.com/tf-contrib/terraform-plan-review/internal/diff"
+	"github.com/tf-contrib/terraform-plan-review/internal/github"
+	"github.com/tf-contrib/terraform-plan-review/internal/policy"
+	"github.com/tf-contrib/terraform-plan-review/internal/report"
 )
 
 // GitHub shows at most 10 annotations of each level per step; anything

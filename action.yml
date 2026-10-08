@@ -1,6 +1,6 @@
 name: Terraform Plan Review
 description: Readable Terraform and OpenTofu plan reviews on pull requests, with source annotations, change tracking between pushes and policy rules. Linux runners only.
-author: tofu-contrib
+author: tf-contrib
 branding:
   icon: git-pull-request
   color: purple
@@ -67,7 +67,7 @@ runs:
   using: docker
   # A FROM scratch image holding the static binary. release-please updates
   # the tag on every release, so each ref runs the image it was released with.
-  image: docker://ghcr.io/tofu-contrib/terraform-plan-review:v0.2.1 # x-release-please-version
+  image: docker://ghcr.io/tf-contrib/terraform-plan-review:v0.2.1 # x-release-please-version
   args: [action]
   env:
     TERRAFORM_PLAN_REVIEW_MODE: ${{ inputs.mode }}
