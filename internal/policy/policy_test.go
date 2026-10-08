@@ -26,25 +26,23 @@ func TestFind(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	check := func(wantFile string, wantLegacy bool) {
+	check := func(wantFile string) {
 		t.Helper()
-		file, legacy, err := Find(root)
+		file, err := Find(root)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if wantFile != "" {
 			wantFile = filepath.Join(root, wantFile)
 		}
-		if file != wantFile || legacy != wantLegacy {
-			t.Errorf("got %q, legacy %v; want %q, legacy %v", file, legacy, wantFile, wantLegacy)
+		if file != wantFile {
+			t.Errorf("got %q, want %q", file, wantFile)
 		}
 	}
 
-	check("", false)
-	write(LegacyFile)
-	check(LegacyFile, true)
+	check("")
 	write(DefaultFile)
-	check(DefaultFile, false)
+	check(DefaultFile)
 }
 
 func TestLoadValidates(t *testing.T) {

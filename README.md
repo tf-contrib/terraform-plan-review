@@ -181,7 +181,7 @@ without a new push.
 | `report`            | `terraform-plan-review.json`        | Report path in `analyze` mode                                            |
 | `config`            | `.github/terraform-plan-review.hcl` | Rules file; a missing path is an error, a missing default means no rules |
 | `id`                | `default`                           | Comment identifier, for independent comments on one pull request         |
-| `title`             | `OpenTofu plan`                     | Comment title                                                            |
+| `title`             | `Plan`                              | Comment title                                                            |
 | `annotate`          | `true`                              | Annotate source lines in the pull request diff                           |
 | `summary`           | `true`                              | Write the full review to the job summary                                 |
 | `fail-on-block`     | `true`                              | Fail the step when a blocking rule matches                               |

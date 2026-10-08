@@ -1,4 +1,4 @@
-// Command terraform-plan-review renders OpenTofu plans for pull request review.
+// Command terraform-plan-review renders Terraform and OpenTofu plans for pull request review.
 package main
 
 import (

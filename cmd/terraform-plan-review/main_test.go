@@ -283,30 +283,26 @@ func TestAnalyzeRequiresOnePlan(t *testing.T) {
 }
 
 func TestDefaultConfigPath(t *testing.T) {
-	for _, file := range []string{policy.DefaultFile, policy.LegacyFile} {
-		t.Run(file, func(t *testing.T) {
-			root := t.TempDir()
-			path := filepath.Join(root, file)
-			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-				t.Fatal(err)
-			}
-			rules := `rule "no-deletes" {
+	root := t.TempDir()
+	path := filepath.Join(root, policy.DefaultFile)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	rules := `rule "no-deletes" {
   severity = "block"
   actions  = ["delete"]
 }
 `
-			if err := os.WriteFile(path, []byte(rules), 0o644); err != nil {
-				t.Fatal(err)
-			}
-			plan, _ := filepath.Abs(basicPlan)
-			out, err := run(t, "render", "--dir", root, "--repo-root", root, plan)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !strings.Contains(out, "Blocked by policy") {
-				t.Errorf("rules in %s should be loaded by default", file)
-			}
-		})
+	if err := os.WriteFile(path, []byte(rules), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	plan, _ := filepath.Abs(basicPlan)
+	out, err := run(t, "render", "--dir", root, "--repo-root", root, plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Blocked by policy") {
+		t.Errorf("rules in %s should be loaded by default", policy.DefaultFile)
 	}
 }
 

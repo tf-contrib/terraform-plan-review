@@ -17,16 +17,16 @@ import (
 )
 
 type Plan struct {
-	FormatVersion   string            `json:"format_version"`
-	TofuVersion     string            `json:"terraform_version"`
-	ResourceChanges []ResourceChange  `json:"resource_changes"`
-	ResourceDrift   []ResourceChange  `json:"resource_drift"`
-	OutputChanges   map[string]Change `json:"output_changes"`
-	Configuration   Configuration     `json:"configuration"`
-	Errored         bool              `json:"errored"`
-	Complete        *bool             `json:"complete"`
-	Applyable       *bool             `json:"applyable"`
-	Timestamp       string            `json:"timestamp"`
+	FormatVersion    string            `json:"format_version"`
+	TerraformVersion string            `json:"terraform_version"`
+	ResourceChanges  []ResourceChange  `json:"resource_changes"`
+	ResourceDrift    []ResourceChange  `json:"resource_drift"`
+	OutputChanges    map[string]Change `json:"output_changes"`
+	Configuration    Configuration     `json:"configuration"`
+	Errored          bool              `json:"errored"`
+	Complete         *bool             `json:"complete"`
+	Applyable        *bool             `json:"applyable"`
+	Timestamp        string            `json:"timestamp"`
 }
 
 type ResourceChange struct {

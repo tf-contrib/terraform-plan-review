@@ -155,7 +155,7 @@ func (r *renderer) errored() bool {
 func (r *renderer) header(b *strings.Builder) {
 	title := r.opts.Title
 	if title == "" {
-		title = "OpenTofu plan"
+		title = "Plan"
 	}
 	total := r.totals()
 	icon := "🟢"
@@ -486,7 +486,7 @@ func (r *renderer) details(b *strings.Builder, rep *report.Report, t tier) {
 		writeFence(b, lines)
 	}
 	if len(rep.Drift) > 0 {
-		fmt.Fprintf(b, "<details><summary>⚠️ %s changed outside of OpenTofu</summary>\n\n", plural(len(rep.Drift), "resource"))
+		fmt.Fprintf(b, "<details><summary>⚠️ %s changed outside of Terraform/OpenTofu</summary>\n\n", plural(len(rep.Drift), "resource"))
 		b.WriteString("These differences were found while refreshing state. They are not caused by this change, but applying it will reconcile them.\n\n")
 		for _, c := range rep.Drift {
 			r.change(b, c, t, t <= tierTrimmed)
@@ -636,12 +636,12 @@ func (r *renderer) footer(b *strings.Builder) {
 	// Roots may be planned with different versions; list each once.
 	var versions []string
 	for _, rep := range r.reports {
-		if v := rep.TofuVersion; v != "" && !slices.Contains(versions, v) {
+		if v := rep.TerraformVersion; v != "" && !slices.Contains(versions, v) {
 			versions = append(versions, v)
 		}
 	}
 	if len(versions) > 0 {
-		parts = append(parts, "OpenTofu "+strings.Join(versions, ", "))
+		parts = append(parts, "Terraform/OpenTofu "+strings.Join(versions, ", "))
 	}
 
 	if r.opts.Commit != "" {

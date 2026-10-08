@@ -103,16 +103,12 @@ func (a *analyzer) analyze(planPath string) (*report.Report, error) {
 func (a *analyzer) policy(repoRoot string) (*policy.Config, error) {
 	path := a.config
 	if path == "" {
-		found, legacy, err := policy.Find(repoRoot)
+		found, err := policy.Find(repoRoot)
 		if err != nil {
 			return nil, err
 		}
 		if found == "" {
 			return &policy.Config{}, nil
-		}
-		if legacy {
-			fmt.Fprintf(os.Stderr, "terraform-plan-review: %s is deprecated, move it to %s\n",
-				policy.LegacyFile, policy.DefaultFile)
 		}
 		path = found
 	}
@@ -178,7 +174,7 @@ func renderFlags() []cli.Flag {
 			Name:    "title",
 			Usage:   "comment title",
 			Sources: env("TITLE"),
-			Value:   "OpenTofu plan",
+			Value:   "Plan",
 		},
 	}
 }

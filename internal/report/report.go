@@ -45,11 +45,11 @@ func (a Action) rank() int { return slices.Index(Order, a) }
 func (a Action) Destructive() bool { return a == Delete || a == Replace }
 
 type Report struct {
-	Schema      int    `json:"terraform_plan_review"`
-	Name        string `json:"name,omitempty"`
-	Dir         string `json:"dir,omitempty"`
-	TofuVersion string `json:"tofu_version,omitempty"`
-	Errored     bool   `json:"errored,omitempty"`
+	Schema           int    `json:"terraform_plan_review"`
+	Name             string `json:"name,omitempty"`
+	Dir              string `json:"dir,omitempty"`
+	TerraformVersion string `json:"terraform_version,omitempty"`
+	Errored          bool   `json:"errored,omitempty"`
 	// Incomplete is set for plans created with -target or -exclude.
 	Incomplete    bool     `json:"incomplete,omitempty"`
 	Changes       []Change `json:"changes"`
@@ -101,12 +101,12 @@ type Options struct {
 // Analyze builds a report from a plan.
 func Analyze(p *plan.Plan, opts Options) *Report {
 	r := &Report{
-		Schema:      Schema,
-		Name:        opts.Name,
-		Dir:         opts.Dir,
-		TofuVersion: p.TofuVersion,
-		Errored:     p.Errored,
-		Incomplete:  p.Complete != nil && !*p.Complete,
+		Schema:           Schema,
+		Name:             opts.Name,
+		Dir:              opts.Dir,
+		TerraformVersion: p.TerraformVersion,
+		Errored:          p.Errored,
+		Incomplete:       p.Complete != nil && !*p.Complete,
 	}
 	for _, rc := range p.ResourceChanges {
 		if c, ok := convert(rc, opts.Sources); ok {

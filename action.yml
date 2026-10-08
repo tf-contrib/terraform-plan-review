@@ -33,7 +33,7 @@ inputs:
     default: default
   title:
     description: Comment title.
-    default: OpenTofu plan
+    default: Plan
   annotate:
     description: Annotate changed resources on their source lines in the pull request diff.
     default: "true"

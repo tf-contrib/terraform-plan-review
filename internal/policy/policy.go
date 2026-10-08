@@ -31,22 +31,16 @@ import (
 // DefaultFile is where rules are read from, relative to the repository root.
 const DefaultFile = ".github/terraform-plan-review.hcl"
 
-// LegacyFile is the default location before 0.2.1. It is still read, with a
-// deprecation notice, when DefaultFile is absent.
-const LegacyFile = ".github/tofu/review.hcl"
-
-// Find returns the rules file in repoRoot, or "" when there is none. legacy
-// reports whether it was found at LegacyFile.
-func Find(repoRoot string) (file string, legacy bool, err error) {
-	for _, name := range []string{DefaultFile, LegacyFile} {
-		path := filepath.Join(repoRoot, name)
-		if _, err := os.Stat(path); err == nil {
-			return path, name == LegacyFile, nil
-		} else if !errors.Is(err, os.ErrNotExist) {
-			return "", false, err
+// Find returns the rules file in repoRoot, or "" when there is none.
+func Find(repoRoot string) (string, error) {
+	path := filepath.Join(repoRoot, DefaultFile)
+	if _, err := os.Stat(path); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", nil
 		}
+		return "", err
 	}
-	return "", false, nil
+	return path, nil
 }
 
 type Severity string
