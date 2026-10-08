@@ -20,7 +20,7 @@
           inherit version;
           src = pkgs.lib.cleanSource ./.;
           subPackages = [ "cmd/terraform-plan-review" ];
-          vendorHash = "sha256-d0/mmonSbZNTr/RMVlGQ/MzQcpQiLcIie98Bc9aGpsU=";
+          vendorHash = "sha256-DkoCiB8Y4wZGhlN1R73Sqzk5wBxn9pXPendOzItFRgo=";
           env.CGO_ENABLED = 0;
           ldflags = [
             "-s"
