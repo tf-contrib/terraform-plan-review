@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/tf-contrib/terraform-plan-review/compare/v0.3.0...v0.4.0) (2026-11-07)
+
+
+### Features
+
+* **ci:** push the Nix build to Cachix, and merge with the App token ([#24](https://github.com/tf-contrib/terraform-plan-review/issues/24)) ([44c6a66](https://github.com/tf-contrib/terraform-plan-review/commit/44c6a66c1182708a8780c0287527d5178d833f74))
+
 ## [0.3.0](https://github.com/tf-contrib/terraform-plan-review/compare/v0.2.1...v0.3.0) (2026-10-08)
 
 
